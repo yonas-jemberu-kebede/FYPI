@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            // Used for authentication
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
+            // Role of the user
+            $table->enum('role', ['Super Admin', 'Hospital Admin', 'Doctor', 'Pharmacist', 'Lab Technician', 'Patient']);
+            // Links to the specific entity record (e.g., patients.id, doctors.id, etc.)
+            $table->unsignedBigInteger('associated_id')->nullable();
+            // Gender of the user (if applicable)
+
             $table->timestamps();
         });
 
