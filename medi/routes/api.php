@@ -33,11 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::resource('hospitals', HospitalController::class);
     });
 
-    // Route::resource('patients', PatientController::class);
-    // Route::resource('hospitals', HospitalController::class);
-    // Route::resource('doctors', DoctorController::class);
-    // Route::resource('pharmacies', PharmacyController::class);
-    // Route::resource('diagnosticcenters', DiagnosticCenterController::class);
+    Route::resource('patients', PatientController::class);
+    Route::resource('hospitals', HospitalController::class);
+    Route::resource('doctors', DoctorController::class);
+    Route::resource('pharmacies', PharmacyController::class);
+    Route::resource('diagnosticcenters', DiagnosticCenterController::class);
     Route::resource('pharmacists', PharmacistController::class);
     Route::resource('labtechnicians', LabTechnicianController::class);
 });
