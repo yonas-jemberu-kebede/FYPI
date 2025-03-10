@@ -22,6 +22,7 @@ return new class extends Migration
             // Phone number for lab technician contact
             $table->string('phone_number');
             $table->date('date_of_birth');
+            $table->date('shift_date');
             $table->timestamps();
 
             $table->foreign('diagnostic_center_id')->references('id')->on('diagnostic_centers')->onDelete('cascade');
