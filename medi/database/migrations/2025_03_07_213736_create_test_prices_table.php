@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hospitals', function (Blueprint $table) {
+        Schema::create('test_prices', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            // Official email for hospital communication
-            $table->string('email')->unique();
-            $table->text('address');
-            $table->string('phone_number');
-            $table->string('account');
-
+            $table->string("test_name");
+            $table->decimal("price",8,2);
+            $table->foreignId("diagnostic_center_id")->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hospitals');
+        Schema::dropIfExists('test_prices');
     }
 };
