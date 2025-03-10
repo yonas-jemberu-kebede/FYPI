@@ -16,103 +16,128 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
+       
+        $baseValidation = [
+            'firstName' => 'required|string|max:255',
+            'lastName' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:Patient,Doctor,Pharmacist,Lab Technician,Hospital Admin,Super Admin',
+            'password' => 'required|string|min:6|confirmed',
+            'phone' => 'required|string|max:20',
+            'gender' => 'required|in:Male,Female,Other',
+            'dob' => 'required|date|before:-18 years',
+            'role' => 'nullable|in:Patient,Doctor,Pharmacist,Lab Technician,Hospital Admin,Super Admin',
+        ];
+    
+      
+        $roleValidations = [
+            'Doctor' => [
+                'specialization' => 'required|string',
+                'hospital_id' => 'required|exists:hospitals,id'
+            ],
+            'Pharmacist' => [
+                'pharmacy_id' => 'required|exists:pharmacies,id'
+            ],
+            'Lab Technician' => [
+                'diagnostic_center_id' => 'required|exists:diagnostic_centers,id'
+            ],
+            'Hospital Admin' => [
+                'hospital_id' => 'required|exists:hospitals,id'
+            ]
+        ];
 
-            // Required fields for specific roles
-            'gender' => 'required_if:role,Doctor,Admin,Super Admin,,Lab Technician,Pharmacist|in:Male,Female',
-            'date_of_birth' => 'required',
-            'specialization' => 'required_if:role,Doctor|string|nullable',
-            'hospital_id' => 'required_if:role,Doctor,Hospital Admint|exists:hospitals,id',
-            'pharmacy_id' => 'required_if:role,Pharmacist|exists:pharmacies,id',
-            'diagnostic_center_id' => 'required_if:role,Lab Technician|exists:diagnostic_centers,id',
-        ]);
-
-        $associated_id = null;
-
-        switch ($request->role) {
+        $role = $request->input('role', 'Patient');
+    
+     
+        $validated = $request->validate(array_merge(
+            $baseValidation,
+            $roleValidations[$role] ?? []
+        ));
+    
+        
+        $associatedId = null;
+        
+        switch ($role) {
             case 'Patient':
                 $entity = Patient::create([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-
-                    'email' => $request->email,
-
-                    'date_of_birth' => $request->date_of_birth,
-                    'gender' => $request->gender,
-                    'phone_number' => $request->phone_number,
+                    'first_name' => $validated['firstName'],
+                    'last_name' => $validated['lastName'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone'],
+                    'date_of_birth' => $validated['dob'],
+                    'gender' => $validated['gender'],
                 ]);
-                $associated_id = $entity->id;
+                $associatedId = $entity->id;
                 break;
-
+    
             case 'Doctor':
                 $entity = Doctor::create([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'specialization' => $request->specialization ?? 'General',
-                    'email' => $request->email,
-                    'hospital_id' => $request->hospital_id,
-                    'date_of_birth' => $request->date_of_birth,
-                    'gender' => $request->gender,
-                    'phone_number' => $request->phone_number,
+                    'first_name' => $validated['firstName'],
+                    'last_name' => $validated['lastName'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone'],
+                    'date_of_birth' => $validated['dob'],
+                    'gender' => $validated['gender'],
+                    'specialization' => $validated['specialization'],
+                    'hospital_id' => $validated['hospital_id'],
                 ]);
-                $associated_id = $entity->id;
+                $associatedId = $entity->id;
                 break;
-
+    
             case 'Pharmacist':
                 $entity = Pharmacist::create([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'email' => $request->email,
-                    'pharmacy_id' => $request->pharmacy_id,
-                    'date_of_birth' => $request->date_of_birth,
-                    'gender' => $request->gender,
-                    'phone_number' => $request->phone_number,
+                    'first_name' => $validated['firstName'],
+                    'last_name' => $validated['lastName'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone'],
+                    'date_of_birth' => $validated['dob'],
+                    'gender' => $validated['gender'],
+                    'pharmacy_id' => $validated['pharmacy_id'],
                 ]);
-                $associated_id = $entity->id;
+                $associatedId = $entity->id;
                 break;
-
+    
             case 'Lab Technician':
                 $entity = LabTechnician::create([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'email' => $request->email,
-                    'diagnostic_center_id' => $request->diagnostic_center_id,
-                    'date_of_birth' => $request->date_of_birth,
-                    'gender' => $request->gender,
-                    'phone_number' => $request->phone_number,
+                    'first_name' => $validated['firstName'],
+                    'last_name' => $validated['lastName'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone'],
+                    'date_of_birth' => $validated['dob'],
+                    'gender' => $validated['gender'],
+                    'diagnostic_center_id' => $validated['diagnostic_center_id'],
                 ]);
-                $associated_id = $entity->id;
+                $associatedId = $entity->id;
                 break;
-
+    
             case 'Hospital Admin':
-                if (Hospital::find($request->hospital_id)) {
-                    $associated_id = $request->hospital_id;
+               
+                if (Hospital::find($validated['hospital_id'])) {
+                    $associatedId = $validated['hospital_id'];
                 }
                 break;
-
+    
             case 'Super Admin':
-                $associated_id = null; // No associated entity for Super Admin
+            
                 break;
         }
-
+    
+       
         $user = User::create([
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'associated_id' => $associated_id,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $role,
+            'associated_id' => $associatedId,
         ]);
-
+    
+    
+        $token = $user->createToken('auth_token')->plainTextToken;
+    
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Registration successful',
             'user' => $user,
+            'token' => $token,
         ], 201);
     }
-
     public function login(Request $request)
     {
         $request->validate([
