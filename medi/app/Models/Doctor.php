@@ -21,4 +21,12 @@ class Doctor extends Model
     {
         return $this->belongsTo(Hospital::class);
     }
+    public function patients()
+    {
+        return $this->hasMany(Patient::class);
+    }
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
 }
