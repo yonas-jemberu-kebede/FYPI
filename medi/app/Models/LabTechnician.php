@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Notification;
 
 class LabTechnician extends Model
 {
@@ -20,5 +21,8 @@ class LabTechnician extends Model
     public function diagnosticCenter()
     {
         return $this->belongsTo(DiagnosticCenter::class);
+    }
+    public function notifications(){
+        return $this->morphMany(Notification::class,'notifiable');
     }
 }

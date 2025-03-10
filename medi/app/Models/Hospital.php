@@ -10,7 +10,7 @@ class Hospital extends Model
     /** @use HasFactory<\Database\Factories\HospitalFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'address', 'phone_number', 'gender'];
+    protected $fillable = ['name', 'email', 'address', 'phone_number', 'gender', 'account'];
 
     public function doctors()
     {
@@ -30,5 +30,8 @@ class Hospital extends Model
     public function admin()
     {
         return $this->hasOne(User::class, 'associated_id', 'id')->where('role', 'Hospital Admin');
+    }
+    public function notifications(){
+        return $this->morphMany(Notification::class,'notifiable');
     }
 }

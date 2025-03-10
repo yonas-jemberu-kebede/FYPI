@@ -5,13 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Appointment extends Model
+class Prescription extends Model
 {
-    /** @use HasFactory<\Database\Factories\AppointmentFactory> */
+    /** @use HasFactory<\Database\Factories\PrescriptionFactory> */
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'doctor_id', 'hospital_id', 'appointment_date', 'appointment_time', 'amount', 'status'];
+    protected $fillable = [
+        'patient_id',
+        'doctor_id',
+        'pharmacy_id',
+        'pharmacist_id',
+        'status',
+    ];
 
+    // Relationships
     public function patient()
     {
         return $this->belongsTo(Patient::class);
@@ -22,9 +29,14 @@ class Appointment extends Model
         return $this->belongsTo(Doctor::class);
     }
 
-    public function hospital()
+    public function pharmacy()
     {
-        return $this->belongsTo(Hospital::class);
+        return $this->belongsTo(Pharmacy::class);
+    }
+
+    public function pharmacist()
+    {
+        return $this->belongsTo(Pharmacist::class);
     }
 
     public function payment()

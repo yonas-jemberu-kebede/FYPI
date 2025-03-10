@@ -16,4 +16,8 @@ class Patient extends Model
     {
         return $this->hasOne(User::class, 'associated_id', 'id');
     }
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
 }
