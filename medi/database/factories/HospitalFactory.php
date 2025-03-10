@@ -21,6 +21,7 @@ class HospitalFactory extends Factory
             'email' => fake()->unique()->email(),
             'address' => fake()->address(),
             'phone_number' => fake()->phoneNumber(),
+            'account' => 'CHASECK_TEST - 4 M3phlAp4st05LGUAjM3c3oBonocWghg',
 
         ];
     }
