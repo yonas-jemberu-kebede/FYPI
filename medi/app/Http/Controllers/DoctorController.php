@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Doctor;
+use App\Models\Hospital;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,16 @@ class DoctorController extends Controller
     /**
      * Display a listing of the resource.
      */
+    public function getHospitalDoctors(Hospital $hospital)
+    {
+        $hospitalDoctors = Doctor::where('hospital_id', $hospital)->get();
+
+        return response()->json([
+            'doctors in the hospital' => $hospitalDoctors,
+        ]);
+
+    }
+
     public function index()
     {
         $allDoctors = Doctor::get();

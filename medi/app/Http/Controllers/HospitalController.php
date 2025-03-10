@@ -30,6 +30,7 @@ class HospitalController extends Controller
             'email' => 'required|email|unique:users,email|unique:Hospitals,email,',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',  // Needed for User creation
+            'account' => 'required|string',
         ]);
 
         $hospital = Hospital::create(
@@ -38,6 +39,7 @@ class HospitalController extends Controller
                 'email' => $validated['email'],
                 'address' => $validated['address'],
                 'phone_number' => $validated['phone_number'],
+                'account' => encrypt($validated['account']),
             ]
         );
 
@@ -73,9 +75,10 @@ class HospitalController extends Controller
         // Validate input while ignoring the current Hospital's email
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|unique:Hospitals,email,'.$hospital->id,
+            'email' => "required|email|unique:users,email|unique:Hospitals,email,{$id}",
             'phone_number' => 'required|string|max:20',
-            'address' => 'required|string', // Password is optional on update
+            'address' => 'required|string',
+            'account' => 'required|string', // Password is optional on update
         ]);
 
         // Update the Hospital record
