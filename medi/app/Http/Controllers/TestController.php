@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Events\TestPaymentRequested;
 use App\Models\Hospital;
+use App\Models\LabTechnician;
 use App\Models\patient;
 use App\Models\TestPrice;
+use App\Models\Payment;
+use App\Models\PendingTesing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class TestController extends Controller
 {
@@ -17,36 +21,45 @@ class TestController extends Controller
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
-            'lab_technician_id' => 'required|exists:lab_technicians,id',
-            'diagnostic_center_id' => 'required|exists:diagnostic_centers,id',
-            'test_requests' => 'required|array',
+            'hospital_id' => 'required|exists:hospitals,id',
+
+            'test_ids' => 'required|array|exists:test_prices,id',
+        ]);
+        $testIds = $validated['test_id'];
+        $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
+
+        $now = Carbon::now();
+        $currentDay = strtolower($now->dayName);
+        $currentTime = $now->toTimeString();
+
+        $labTechnician = LabTechnician::where('hospital_id', $validated['hospital_id'])
+            ->where('shift_day', $currentDay)
+            ->where('shift_start', '<=', $currentTime)
+            ->where('shift_end', '>=', $currentTime)
+            ->first();
+        $labTechnicianId = $labTechnician ? $labTechnician->id : null;
+
+
+        $pendingTesting = PendingTesing::create([
+            'patient_id' => $validated['patient_id'],
+            'doctor_id' => $validated['doctor_id'],
+            'hospital_id' => $validated['hospital_id'],
+            'lab_technician_id' => $labTechnicianId,
+            'test_requests' => $testIds,
+            'total_amount' => $totalAmount,
         ]);
 
-        $total = 0;
-        for ($i = 0; $i < (int) $validated['test_requests']; $i++) {
-
-            $record = TestPrice::Where('test_name', $validated['test_requests'][$i])->get();
-            if (! $record) {
-                return 'requested test is not available';
-            }
-
-            $amount = $record->test_price;
-            $total += $amount;
-        }
-
-        $validated['amount'] = $total;
-
-        $txRef = 'TEST-'.uniqid();
+        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
         $hospital = Hospital::where('hospital_id', $validated['hospital_id'])->get();
         $chapaSecretKey = $hospital->account;
 
         $patient = Patient::where('patient_id', $validated['patient_id'])->get();
-        $email = $patient->email;
+        $email = $pendingTesting->patient->email;
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$chapaSecretKey,
+            'Authorization' => 'Bearer ' . $chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
-            'amount' => $total,
+            'amount' => $totalAmount,
             'currency' => 'ETB',
             'email' => $email,
             'tx_ref' => $txRef,
@@ -58,7 +71,19 @@ class TestController extends Controller
         }
         $responseData = $chapaResponse->json(); // converting the comming response from chapa into array
 
-        // event(new TestPaymentRequested($responseData));
+        payment::create([
+            'tx_ref' => $txRef,
+            'amount' => $totalAmount,
+            'currency=>"ETB',
+            'status' => 'pending',
+            'payable_type' => PendingTesing::class,
+            'payable_id' => $pendingTesting->id,
+            'checkout_url' => $responseData['data']['checkout_url'],
+        ]);
 
+        event(new TestPaymentRequested($pendingTesting));
+        return response()->json([
+            'checkout_url' => $responseData['data']['checkput_url']
+        ]);
     }
 }

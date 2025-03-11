@@ -21,6 +21,10 @@ class PendingTesing extends Model
     {
         return $this->belongsTo(Patient::class);
     }
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class);
+    }
 
     public function doctor()
     {

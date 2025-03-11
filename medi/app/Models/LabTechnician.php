@@ -10,7 +10,7 @@ class LabTechnician extends Model
     /** @use HasFactory<\Database\Factories\LabTechnicianFactory> */
     use HasFactory;
 
-    protected $fillable = ['first_name', 'last_name', 'email', 'diagnostic_center_id', 'gender', 'phone_number', 'date_of_birth'];
+    protected $fillable = [];
 
     public function user()
     {
@@ -26,4 +26,9 @@ class LabTechnician extends Model
     {
         return $this->morphMany(Notification::class, 'notifiable');
     }
+
+    protected $casts = [
+        'shift_start' => 'datetime:H:i',
+        'shift_end' => 'datetime:H:i',
+    ];
 }
