@@ -10,17 +10,12 @@ class Test extends Model
     /** @use HasFactory<\Database\Factories\TestFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'patient_id',
-        'doctor_id',
-        'lab_technician_id',
-        'amount',
-        'status',
-        'test_requests',
-        'test_results',
-        'test_date'
+    protected $guarded = [
     ];
-
+protected $casts=[
+    'test_requests'=>'array',
+    'test_results'=>'array'
+];
     // Relationships
     public function patient()
     {
@@ -37,9 +32,6 @@ class Test extends Model
     {
         return $this->belongsTo(LabTechnician::class);
     }
-public function testPrices(){
-    return $this->hasMany(TestPrice::class);
-}
     public function payment()
     {
         return $this->morphOne(Payment::class, 'payable');
