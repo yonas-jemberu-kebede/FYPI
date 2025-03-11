@@ -21,4 +21,8 @@ class DiagnosticCenter extends Model
     {
         return $this->hasMany(LabTechnician::class);
     }
+    public function testPrices()
+    {
+        return $this->hasMany(TestPrice::class);
+    }
 }

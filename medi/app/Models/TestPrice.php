@@ -11,7 +11,7 @@ class TestPrice extends Model
     use HasFactory;
     protected $guarded=[];
 
-    public function test(){
-       return  $this->belongsTo(Test::class);
+    public function diagnosticCenters(){
+       return  $this->belongsTo(DiagnosticCenter::class);
     }
 }
