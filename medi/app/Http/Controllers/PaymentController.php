@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Events\AppointmentConfirmed;
 use App\Models\Appointment;
 use App\Models\Hospital;
-use Illuminate\Support\Facades\Log;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\PendingBooking;
@@ -13,6 +12,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -82,7 +82,6 @@ class PaymentController extends Controller
         ]);
     }
 
-
     public function handleChapaWebhook(Request $request)
     {
         $data = $request->all();
@@ -90,62 +89,62 @@ class PaymentController extends Controller
 
         if (! $txRef) {
             Log::error('Webhook received without tx_ref');
+
             return response()->json(['error' => 'Missing transaction reference'], 400);
         }
 
-
         $payment = Payment::where('tx_ref', $txRef)->first();
-        if (!$payment) {
+        if (! $payment) {
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
         $payment->update(['status' => $data['status']]);
-       if ($data['status'] === 'success') {
-             $pendingBooking = PendingBooking::where('tx_ref', $txRef)->where('payment_id', $payment->id)->first();
-             if (!$pendingBooking) {
-                 return response()->json(['error' => 'Pending booking not found'], 404);
-             }
+        if ($data['status'] === 'success') {
+            $pendingBooking = PendingBooking::where('tx_ref', $txRef)->where('payment_id', $payment->id)->first();
+            if (! $pendingBooking) {
+                return response()->json(['error' => 'Pending booking not found'], 404);
+            }
 
-         $pendingData = $pendingBooking->data;
+            $pendingData = $pendingBooking->data;
 
-             $patient = Patient::firstOrCreate(
-                 ['email' => $pendingData['patient']['email']],
-                 [
+            $patient = Patient::firstOrCreate(
+                ['email' => $pendingData['patient']['email']],
+                [
                     'first_name' => $pendingData['patient']['first_name'],
-                     'last_name' => $pendingData['patient']['last_name'],
-                 'phone_number' => $pendingData['patient']['phone_number'],
-                     'date_of_birth' => $pendingData['patient']['date_of_birth'],
-                     'gender' => $pendingData['patient']['gender'],
-                 ]
-             );
+                    'last_name' => $pendingData['patient']['last_name'],
+                    'phone_number' => $pendingData['patient']['phone_number'],
+                    'date_of_birth' => $pendingData['patient']['date_of_birth'],
+                    'gender' => $pendingData['patient']['gender'],
+                ]
+            );
 
-         $appointment = Appointment::create([
+            $appointment = Appointment::create([
                 'patient_id' => $patient->id,
                 'doctor_id' => $pendingData['appointment']['doctor_id'],
-                 'hospital_id' => $pendingData['appointment']['hospital_id'],
-                 'appointment_date' => $pendingData['appointment']['appointment_date'],
-                 'appointment_time' => $pendingData['appointment']['appointment_time'],
-                 'amount' => $pendingData['appointment']['amount'],
-                 'status' => 'paid',
-             ]);
+                'hospital_id' => $pendingData['appointment']['hospital_id'],
+                'appointment_date' => $pendingData['appointment']['appointment_date'],
+                'appointment_time' => $pendingData['appointment']['appointment_time'],
+                'amount' => $pendingData['appointment']['amount'],
+                'status' => 'paid',
+            ]);
 
-         $user = User::create([
-                 'email' => $pendingData['user']['email'],
-                 'password' => $pendingData['user']['password'],
-                 'role' => $pendingData['user']['role'],
-                 'associated_id' => $patient->id,
-             ]);
+            $user = User::create([
+                'email' => $pendingData['user']['email'],
+                'password' => $pendingData['user']['password'],
+                'role' => $pendingData['user']['role'],
+                'associated_id' => $patient->id,
+            ]);
 
-             $payment->update([
-                 'type' => Appointment::class,
-                 'type_id' => $appointment->id,
-                 'patient_id' => $patient->id,
-             ]);
+            $payment->update([
+                'type' => Appointment::class,
+                'type_id' => $appointment->id,
+                'patient_id' => $patient->id,
+            ]);
 
             $pendingBooking->delete();
-             event(new AppointmentConfirmed($appointment));
-         }
+            event(new AppointmentConfirmed($appointment));
+        }
 
-         return response()->json(['message' => 'Webhook processed'], 200);
+        return response()->json(['message' => 'Webhook processed'], 200);
     }
 }

@@ -16,7 +16,7 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-       
+
         $baseValidation = [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
@@ -27,35 +27,32 @@ class AuthController extends Controller
             'dob' => 'required|date|before:-18 years',
             'role' => 'nullable|in:Patient,Doctor,Pharmacist,Lab Technician,Hospital Admin,Super Admin',
         ];
-    
-      
+
         $roleValidations = [
             'Doctor' => [
                 'specialization' => 'required|string',
-                'hospital_id' => 'required|exists:hospitals,id'
+                'hospital_id' => 'required|exists:hospitals,id',
             ],
             'Pharmacist' => [
-                'pharmacy_id' => 'required|exists:pharmacies,id'
+                'pharmacy_id' => 'required|exists:pharmacies,id',
             ],
             'Lab Technician' => [
-                'diagnostic_center_id' => 'required|exists:diagnostic_centers,id'
+                'diagnostic_center_id' => 'required|exists:diagnostic_centers,id',
             ],
             'Hospital Admin' => [
-                'hospital_id' => 'required|exists:hospitals,id'
-            ]
+                'hospital_id' => 'required|exists:hospitals,id',
+            ],
         ];
 
         $role = $request->input('role', 'Patient');
-    
-     
+
         $validated = $request->validate(array_merge(
             $baseValidation,
             $roleValidations[$role] ?? []
         ));
-    
-        
+
         $associatedId = null;
-        
+
         switch ($role) {
             case 'Patient':
                 $entity = Patient::create([
@@ -68,7 +65,7 @@ class AuthController extends Controller
                 ]);
                 $associatedId = $entity->id;
                 break;
-    
+
             case 'Doctor':
                 $entity = Doctor::create([
                     'first_name' => $validated['firstName'],
@@ -82,7 +79,7 @@ class AuthController extends Controller
                 ]);
                 $associatedId = $entity->id;
                 break;
-    
+
             case 'Pharmacist':
                 $entity = Pharmacist::create([
                     'first_name' => $validated['firstName'],
@@ -95,7 +92,7 @@ class AuthController extends Controller
                 ]);
                 $associatedId = $entity->id;
                 break;
-    
+
             case 'Lab Technician':
                 $entity = LabTechnician::create([
                     'first_name' => $validated['firstName'],
@@ -108,36 +105,35 @@ class AuthController extends Controller
                 ]);
                 $associatedId = $entity->id;
                 break;
-    
+
             case 'Hospital Admin':
-               
+
                 if (Hospital::find($validated['hospital_id'])) {
                     $associatedId = $validated['hospital_id'];
                 }
                 break;
-    
+
             case 'Super Admin':
-            
+
                 break;
         }
-    
-       
+
         $user = User::create([
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $role,
             'associated_id' => $associatedId,
         ]);
-    
-    
+
         $token = $user->createToken('auth_token')->plainTextToken;
-    
+
         return response()->json([
             'message' => 'Registration successful',
             'user' => $user,
             'token' => $token,
         ], 201);
     }
+
     public function login(Request $request)
     {
         $request->validate([

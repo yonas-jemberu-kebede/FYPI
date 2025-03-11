@@ -11,9 +11,11 @@ class PendingTesing extends Model
     use HasFactory;
 
     protected $guarded = [];
+
     protected $casts = [
         'test_requests' => 'array',
     ];
+
     // Relationships
     public function patient()
     {
@@ -25,11 +27,11 @@ class PendingTesing extends Model
         return $this->belongsTo(Doctor::class);
     }
 
-
     public function labTechnician()
     {
         return $this->belongsTo(LabTechnician::class);
     }
+
     public function payment()
     {
         return $this->morphOne(Payment::class, 'payable');

@@ -89,7 +89,7 @@ class AppointmentController extends Controller
             'payment_id' => null,
             'hospital_id' => $validated['hospital_id'], // Fixed typo
         ]);
-         
+
         // Step 6: Return response
         return response()->json([
             'tx_ref' => $txRef,

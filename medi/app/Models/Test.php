@@ -12,10 +12,12 @@ class Test extends Model
 
     protected $guarded = [
     ];
-protected $casts=[
-    'test_requests'=>'array',
-    'test_results'=>'array'
-];
+
+    protected $casts = [
+        'test_requests' => 'array',
+        'test_results' => 'array',
+    ];
+
     // Relationships
     public function patient()
     {
@@ -27,11 +29,11 @@ protected $casts=[
         return $this->belongsTo(Doctor::class);
     }
 
-
     public function labTechnician()
     {
         return $this->belongsTo(LabTechnician::class);
     }
+
     public function payment()
     {
         return $this->morphOne(Payment::class, 'payable');

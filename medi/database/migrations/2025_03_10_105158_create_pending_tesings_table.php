@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lab_technician_id')->nullable()->constrained()->cascadeOnDelete();
-            
+
             $table->json('test_requests');
             $table->decimal('total_amount', 8, 2);
             $table->string('status')->default('pending_payment');

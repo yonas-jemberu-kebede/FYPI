@@ -40,7 +40,6 @@ Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, '
 
 // });
 
-
 Route::resource('patients', PatientController::class);
 Route::resource('hospitals', HospitalController::class);
 Route::resource('doctors', DoctorController::class);

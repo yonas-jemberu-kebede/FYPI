@@ -9,9 +9,11 @@ class TestPrice extends Model
 {
     /** @use HasFactory<\Database\Factories\TestPriceFactory> */
     use HasFactory;
-    protected $guarded=[];
 
-    public function diagnosticCenters(){
-       return  $this->belongsTo(DiagnosticCenter::class);
+    protected $guarded = [];
+
+    public function diagnosticCenters()
+    {
+        return $this->belongsTo(DiagnosticCenter::class);
     }
 }
