@@ -20,11 +20,12 @@ class PaymentController extends Controller
     {
 
         // message returned from the backend after pendingbooking is created
-        $validated = $request->validate([
-            'tx_ref' => 'required|string',
-            'amount' => 'required|numeric|min:100',
-            'email' => 'required|email',
-        ]
+        $validated = $request->validate(
+            [
+                'tx_ref' => 'required|string',
+                'amount' => 'required|numeric|min:100',
+                'email' => 'required|email',
+            ]
 
         );
 
@@ -43,8 +44,9 @@ class PaymentController extends Controller
             'amount' => $amount,
             'currency' => 'ETB',
             'status' => 'pending',
-            'type' => 'appointment',
-            'type_id' => null,
+            'payable_type' => 'appointment',
+            'payable_id' => null,
+            'checkout_url' => null,
             'patient_id' => null,
         ]);
         // updating the payment_id column in the pendingbooking table
@@ -62,13 +64,13 @@ class PaymentController extends Controller
         }
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$chapaSecretKey,
+            'Authorization' => 'Bearer ' . $chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $amount,
             'currency' => 'ETB',
             'email' => $email,
             'tx_ref' => $txRef,
-            'callback_url' => 'https://7c96-109-236-81-168.ngrok-free.app/api/webhook/chapa',
+            'callback_url' => 'https://c3b6-190-2-141-80.ngrok-free.app/api/webhook/chapa',
         ]);
 
         if ($chapaResponse->failed()) {
@@ -86,6 +88,8 @@ class PaymentController extends Controller
     {
         $data = $request->all();
         $txRef = $request->input('tx_ref');
+
+        dd($data);
 
         if (! $txRef) {
             Log::error('Webhook received without tx_ref');

@@ -17,7 +17,8 @@ return new class extends Migration
             $table->decimal('amount', 8, 2);
             $table->string('currency')->default('ETB');
             $table->string('status')->default('pending');
-            $table->morphs('payable');
+            $table->string('payable_type');
+            $table->unsignedBigInteger('payable_id')->nullable();
             $table->string('checkout_url')->nullable();
             $table->foreignId('patient_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
