@@ -5,7 +5,6 @@ namespace App\Mail;
 use App\Models\Payment;
 use App\Models\PendingTesting;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -18,13 +17,14 @@ class TestPaymentRequestEmail extends Mailable
     /**
      * Create a new message instance.
      */
+    public $pendingTesting;
 
-     public $pendingTesting;
-     public $payment;
-    public function __construct(PendingTesting $pendingTesting,Payment $payment)
+    public $payment;
+
+    public function __construct(PendingTesting $pendingTesting, Payment $payment)
     {
-        $this->pendingTesting=$pendingTesting;
-        $this->payment=$payment;
+        $this->pendingTesting = $pendingTesting;
+        $this->payment = $payment;
     }
 
     /**
@@ -45,7 +45,7 @@ class TestPaymentRequestEmail extends Mailable
         return new Content(
             view: 'view.name',
             with: [
-                'patientName'=>$this->pendingTesting->patient->firstName,
+                'patientName' => $this->pendingTesting->patient->firstName,
                 'testDetails' => $this->pendingTesting->test_requests,
                 'totalAmount' => $this->pendingTesting->total_amount,
                 'paymentLink' => $this->payment->checkout_url,

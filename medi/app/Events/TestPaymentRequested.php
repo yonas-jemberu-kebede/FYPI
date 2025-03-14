@@ -17,9 +17,9 @@ class TestPaymentRequested
      */
     public $pendingTesting;
 
-    public function __construct(PendingTesting $pendingTesing)
+    public function __construct(PendingTesting $pendingTesting)
     {
-        $this->pendingTesting = $pendingTesing;
+        $this->pendingTesting = $pendingTesting;
     }
 
     /**
