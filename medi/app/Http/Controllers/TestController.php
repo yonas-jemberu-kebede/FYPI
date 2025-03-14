@@ -6,12 +6,12 @@ use App\Events\TestPaymentRequested;
 use App\Models\Hospital;
 use App\Models\LabTechnician;
 use App\Models\patient;
-use App\Models\TestPrice;
 use App\Models\Payment;
 use App\Models\PendingTesing;
+use App\Models\TestPrice;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
 
 class TestController extends Controller
 {
@@ -39,7 +39,6 @@ class TestController extends Controller
             ->first();
         $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
-
         $pendingTesting = PendingTesing::create([
             'patient_id' => $validated['patient_id'],
             'doctor_id' => $validated['doctor_id'],
@@ -49,15 +48,15 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
+        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
         $hospital = Hospital::where('hospital_id', $validated['hospital_id'])->get();
         $chapaSecretKey = $hospital->account;
 
         $patient = Patient::where('patient_id', $validated['patient_id'])->get();
-        $email = $pendingTesting->patient->email;
+        $email = $patient->email;
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $chapaSecretKey,
+            'Authorization' => 'Bearer '.$chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -82,8 +81,9 @@ class TestController extends Controller
         ]);
 
         event(new TestPaymentRequested($pendingTesting));
+
         return response()->json([
-            'checkout_url' => $responseData['data']['checkput_url']
+            'checkout_url' => $responseData['data']['checkput_url'],
         ]);
     }
 }

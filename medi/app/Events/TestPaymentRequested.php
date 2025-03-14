@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\PendingTesing;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -14,9 +15,11 @@ class TestPaymentRequested
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public $pendingTesting;
+
+    public function __construct(PendingTesing $pendingTesing)
     {
-        //
+        $this->pendingTesting = $pendingTesing;
     }
 
     /**
