@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\AppointmentConfirmed;
+use App\Events\TestPaymentRequested;
 use App\Listeners\SendAppointmentConfirmedNotification;
+use App\Listeners\SendTestPaymentNotification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
             AppointmentConfirmed::class,
             SendAppointmentConfirmedNotification::class
 
+        );
+        Event::listen(
+            TestPaymentRequested::class,
+            SendTestPaymentNotification::class
         );
     }
 }
