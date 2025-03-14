@@ -22,7 +22,7 @@ class AppointmentController extends Controller
 
     public function getDoctorsInHospital(Hospital $hospital)
     {
-        $doctors = Doctor::where('hospital_id', $hospital->id)->first();
+        $doctors = Doctor::where('hospital_id', $hospital->id)->get();
 
         return response()->json([
             'doctors' => $doctors,
