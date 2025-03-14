@@ -7,7 +7,7 @@ use App\Models\Hospital;
 use App\Models\LabTechnician;
 use App\Models\patient;
 use App\Models\Payment;
-use App\Models\PendingTesing;
+use App\Models\PendingTesting;
 use App\Models\TestPrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class TestController extends Controller
             ->first();
         $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
-        $pendingTesting = PendingTesing::create([
+        $pendingTesting = PendingTesting::create([
             'patient_id' => $validated['patient_id'],
             'doctor_id' => $validated['doctor_id'],
             'hospital_id' => $validated['hospital_id'],
@@ -75,7 +75,7 @@ class TestController extends Controller
             'amount' => $totalAmount,
             'currency=>"ETB',
             'status' => 'pending',
-            'payable_type' => PendingTesing::class,
+            'payable_type' => PendingTesting::class,
             'payable_id' => $pendingTesting->id,
             'checkout_url' => $responseData['data']['checkout_url'],
         ]);

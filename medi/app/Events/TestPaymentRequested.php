@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\PendingTesing;
+use App\Models\PendingTesting;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -17,7 +17,7 @@ class TestPaymentRequested
      */
     public $pendingTesting;
 
-    public function __construct(PendingTesing $pendingTesing)
+    public function __construct(PendingTesting $pendingTesing)
     {
         $this->pendingTesting = $pendingTesing;
     }
