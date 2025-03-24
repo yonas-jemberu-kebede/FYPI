@@ -16,29 +16,27 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    public function intiatePayment(Request $request)
+    public function initiatePayment(Request $request)
     {
+        // Validate the incoming request
+        $validated = $request->validate([
+            'tx_ref' => 'required|string',
+            'amount' => 'required|numeric|min:100',
+            'email' => 'required|email',
+        ]);
 
-        // message returned from the backend after pendingbooking is created
-        $validated = $request->validate(
-            [
-                'tx_ref' => 'required|string',
-                'amount' => 'required|numeric|min:100',
-                'email' => 'required|email',
-            ]
-
-        );
-
-        // storing the backend data in the variable( "variable is to be remembered"😅)
         $txRef = $validated['tx_ref'];
         $amount = $validated['amount'];
         $email = $validated['email'];
-        // fetching the record we have stored in the pendingbooking table,we use tx_ref column why? because its unique for each pendingbooking record
+
+        // Fetch the pending booking record
         $pendingBooking = PendingBooking::where('tx_ref', $txRef)->first();
-        if (! $pendingBooking) {
+        if (!$pendingBooking) {
+            Log::error('Invalid or missing booking data', ['tx_ref' => $txRef]);
             return response()->json(['error' => 'Invalid or missing booking data'], 400);
         }
-        // creating a payment record for the appointment(which will get updated later with the remaining informations)
+
+        // Create a payment record
         $payment = Payment::create([
             'tx_ref' => $txRef,
             'amount' => $amount,
@@ -49,68 +47,123 @@ class PaymentController extends Controller
             'checkout_url' => null,
             'patient_id' => null,
         ]);
-        // updating the payment_id column in the pendingbooking table
+
+        // Update the pending booking with the payment ID
         $pendingBooking->update(['payment_id' => $payment->id]);
-        // fetching the hospital which is going to be paid for the appointment
-        if (! $pendingBooking->hospital_id) {
-            throw new Exception(' hospital id is missing ot invalid');
+
+        // Fetch the hospital associated with the booking
+        if (!$pendingBooking->hospital_id) {
+            Log::error('Hospital ID is missing or invalid', ['pending_booking' => $pendingBooking]);
+            throw new Exception('Hospital ID is missing or invalid');
         }
 
-        $hospital = Hospital::where('id', $pendingBooking->hospital_id)->firstOrFail();
-        $chapaSecretKey = $hospital->account;
+        $hospital = Hospital::findOrFail($pendingBooking->hospital_id);
+        $secret = $hospital->account;
 
-        if (! $chapaSecretKey) {
-            throw new Exception('chapa secret key is missing from the hospital');
+        if (!$secret) {
+            Log::error('Chapa secret key is missing for the hospital', ['hospital' => $hospital]);
+            throw new Exception('Chapa secret key is missing for the hospital');
         }
 
+        // Initiate payment with Chapa
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $chapaSecretKey,
+            'Authorization' => 'Bearer ' . $secret,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $amount,
             'currency' => 'ETB',
             'email' => $email,
             'tx_ref' => $txRef,
-            'callback_url' => 'https://c3b6-190-2-141-80.ngrok-free.app/api/webhook/chapa',
+            'callback_url' => 'https://81e0-138-199-7-161.ngrok-free.app/api/webhook/chapa',
         ]);
 
         if ($chapaResponse->failed()) {
+            Log::error('Failed to initiate payment with Chapa', ['response' => $chapaResponse->json()]);
             return response()->json(['error' => 'Failed to initiate payment'], 500);
         }
-        $responseData = $chapaResponse->json(); // converting the comming response from chapa into array
+
+        $responseData = $chapaResponse->json();
 
         return response()->json([
             'checkout_url' => $responseData['data']['checkout_url'],
             'message' => 'Redirect to this URL to complete payment',
         ]);
     }
-
     public function handleChapaWebhook(Request $request)
     {
-        $data = $request->all();
-        $txRef = $request->input('tx_ref');
+        // Log the raw request body and headers
+        $requestBody = $request->getContent();
+        $chapaSignature = $request->header('Chapa-Signature');
 
-        dd($data);
+        Log::info('Webhook request received', [
+            'headers' => $request->headers->all(),
+            'body' => $requestBody,
+        ]);
 
-        if (! $txRef) {
+        // Check if the Chapa-Signature header is present
+        if (!$chapaSignature) {
+            Log::error('Chapa webhook received without Chapa-Signature header');
+            return response()->json(['error' => 'Missing Chapa-Signature header'], 400);
+        }
+
+        // Fetch the transaction reference from the payload
+        $data = json_decode($requestBody, true);
+        $txRef = $data['tx_ref'] ?? null;
+
+        if (!$txRef) {
             Log::error('Webhook received without tx_ref');
-
             return response()->json(['error' => 'Missing transaction reference'], 400);
         }
 
+        // Fetch the payment record
         $payment = Payment::where('tx_ref', $txRef)->first();
-        if (! $payment) {
+        if (!$payment) {
+            Log::error('Payment not found for tx_ref', ['tx_ref' => $txRef]);
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
-        $payment->update(['status' => $data['status']]);
-        if ($data['status'] === 'success') {
-            $pendingBooking = PendingBooking::where('tx_ref', $txRef)->where('payment_id', $payment->id)->first();
-            if (! $pendingBooking) {
-                return response()->json(['error' => 'Pending booking not found'], 404);
-            }
+        // Fetch the hospital associated with the payment
+        $pendingBooking = PendingBooking::where('tx_ref', $txRef)
+            ->where('payment_id', $payment->id)
+            ->first();
 
+        if (!$pendingBooking) {
+            Log::error('Pending booking not found for tx_ref', ['tx_ref' => $txRef]);
+            return response()->json(['error' => 'Pending booking not found'], 404);
+        }
+
+        $hospital = Hospital::findOrFail($pendingBooking->hospital_id);
+        $secret = $hospital->account;
+
+        if (!$secret) {
+            Log::error('Chapa secret key is missing for the hospital', ['hospital' => $hospital]);
+            return response()->json(['error' => 'Internal server error'], 500);
+        }
+
+        // Validate the webhook event by generating the HMAC SHA-256 hash
+        $hash = hash_hmac('sha256', $requestBody, $secret);
+
+        Log::info('Signature comparison', [
+            'expected' => $hash,
+            'received' => $chapaSignature,
+        ]);
+
+        // Compare the generated hash with the Chapa-Signature header
+        if (!hash_equals($hash, $chapaSignature)) {
+            Log::error('Invalid Chapa webhook signature', [
+                'expected' => $hash,
+                'received' => $chapaSignature,
+            ]);
+            return response()->json(['error' => 'Invalid signature'], 401);
+        }
+
+        // Update payment status
+        $payment->update(['status' => $data['status']]);
+
+        if ($data['status'] === 'success') {
+            // Process the successful payment
             $pendingData = $pendingBooking->data;
 
+            // Create or update the patient record
             $patient = Patient::firstOrCreate(
                 ['email' => $pendingData['patient']['email']],
                 [
@@ -122,6 +175,7 @@ class PaymentController extends Controller
                 ]
             );
 
+            // Create the appointment
             $appointment = Appointment::create([
                 'patient_id' => $patient->id,
                 'doctor_id' => $pendingData['appointment']['doctor_id'],
@@ -132,6 +186,7 @@ class PaymentController extends Controller
                 'status' => 'paid',
             ]);
 
+            // Create the user
             $user = User::create([
                 'email' => $pendingData['user']['email'],
                 'password' => $pendingData['user']['password'],
@@ -139,13 +194,17 @@ class PaymentController extends Controller
                 'associated_id' => $patient->id,
             ]);
 
+            // Update the payment record
             $payment->update([
-                'type' => Appointment::class,
-                'type_id' => $appointment->id,
+                'payable_type' => Appointment::class,
+                'payable_id' => $appointment->id,
                 'patient_id' => $patient->id,
             ]);
 
+            // Delete the pending booking
             $pendingBooking->delete();
+
+            // Dispatch the appointment confirmed event
             event(new AppointmentConfirmed($appointment));
         }
 

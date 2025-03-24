@@ -50,7 +50,8 @@ Route::resource('labtechnicians', LabTechnicianController::class);
 
 Route::post('/appointments/book', [AppointmentController::class, 'book']);
 
-Route::post('/appointments/pay', [PaymentController::class, 'intiatePayment']);
+Route::post('/appointments/pay', [PaymentController::class, 'initiatePayment']);
+
 Route::post('/webhook/chapa', [PaymentController::class, 'handleChapaWebhook']);
 Route::get('/user', function (Request $request) {
     return $request->user();
