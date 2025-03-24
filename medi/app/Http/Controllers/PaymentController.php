@@ -31,8 +31,9 @@ class PaymentController extends Controller
 
         // Fetch the pending booking record
         $pendingBooking = PendingBooking::where('tx_ref', $txRef)->first();
-        if (!$pendingBooking) {
+        if (! $pendingBooking) {
             Log::error('Invalid or missing booking data', ['tx_ref' => $txRef]);
+
             return response()->json(['error' => 'Invalid or missing booking data'], 400);
         }
 
@@ -52,7 +53,7 @@ class PaymentController extends Controller
         $pendingBooking->update(['payment_id' => $payment->id]);
 
         // Fetch the hospital associated with the booking
-        if (!$pendingBooking->hospital_id) {
+        if (! $pendingBooking->hospital_id) {
             Log::error('Hospital ID is missing or invalid', ['pending_booking' => $pendingBooking]);
             throw new Exception('Hospital ID is missing or invalid');
         }
@@ -60,14 +61,14 @@ class PaymentController extends Controller
         $hospital = Hospital::findOrFail($pendingBooking->hospital_id);
         $secret = $hospital->account;
 
-        if (!$secret) {
+        if (! $secret) {
             Log::error('Chapa secret key is missing for the hospital', ['hospital' => $hospital]);
             throw new Exception('Chapa secret key is missing for the hospital');
         }
 
         // Initiate payment with Chapa
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $secret,
+            'Authorization' => 'Bearer '.$secret,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $amount,
             'currency' => 'ETB',
@@ -78,6 +79,7 @@ class PaymentController extends Controller
 
         if ($chapaResponse->failed()) {
             Log::error('Failed to initiate payment with Chapa', ['response' => $chapaResponse->json()]);
+
             return response()->json(['error' => 'Failed to initiate payment'], 500);
         }
 
@@ -88,6 +90,7 @@ class PaymentController extends Controller
             'message' => 'Redirect to this URL to complete payment',
         ]);
     }
+
     public function handleChapaWebhook(Request $request)
     {
         // Log the raw request body and headers
@@ -100,8 +103,9 @@ class PaymentController extends Controller
         ]);
 
         // Check if the Chapa-Signature header is present
-        if (!$chapaSignature) {
+        if (! $chapaSignature) {
             Log::error('Chapa webhook received without Chapa-Signature header');
+
             return response()->json(['error' => 'Missing Chapa-Signature header'], 400);
         }
 
@@ -109,15 +113,17 @@ class PaymentController extends Controller
         $data = json_decode($requestBody, true);
         $txRef = $data['tx_ref'] ?? null;
 
-        if (!$txRef) {
+        if (! $txRef) {
             Log::error('Webhook received without tx_ref');
+
             return response()->json(['error' => 'Missing transaction reference'], 400);
         }
 
         // Fetch the payment record
         $payment = Payment::where('tx_ref', $txRef)->first();
-        if (!$payment) {
+        if (! $payment) {
             Log::error('Payment not found for tx_ref', ['tx_ref' => $txRef]);
+
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
@@ -126,16 +132,18 @@ class PaymentController extends Controller
             ->where('payment_id', $payment->id)
             ->first();
 
-        if (!$pendingBooking) {
+        if (! $pendingBooking) {
             Log::error('Pending booking not found for tx_ref', ['tx_ref' => $txRef]);
+
             return response()->json(['error' => 'Pending booking not found'], 404);
         }
 
         $hospital = Hospital::findOrFail($pendingBooking->hospital_id);
         $secret = $hospital->account;
 
-        if (!$secret) {
+        if (! $secret) {
             Log::error('Chapa secret key is missing for the hospital', ['hospital' => $hospital]);
+
             return response()->json(['error' => 'Internal server error'], 500);
         }
 
@@ -148,11 +156,12 @@ class PaymentController extends Controller
         ]);
 
         // Compare the generated hash with the Chapa-Signature header
-        if (!hash_equals($hash, $chapaSignature)) {
+        if (! hash_equals($hash, $chapaSignature)) {
             Log::error('Invalid Chapa webhook signature', [
                 'expected' => $hash,
                 'received' => $chapaSignature,
             ]);
+
             return response()->json(['error' => 'Invalid signature'], 401);
         }
 
