@@ -14,7 +14,7 @@ class SendTestPaymentNotification
     public function __construct(TestPaymentRequested $event) {}
 
     /**
-     * Handle the event.
+     * Handle the event
      */
     public function handle(TestPaymentRequested $event): void
     {

@@ -13,6 +13,6 @@ Broadcast::channel('hospital.{hospital_id}', function ($user, $hospital_id) {
     return $user->id === (int) $hospital_id;
 });
 
-Broadcast::channel('labTechnician.{labTechnician_id}',function($user,$labTechnician_id){
-    return $user->id===(int)$labTechnician_id;
+Broadcast::channel('labTechnician.{labTechnician_id}', function ($user, $labTechnician_id) {
+    return $user->id === (int) $labTechnician_id;
 });
