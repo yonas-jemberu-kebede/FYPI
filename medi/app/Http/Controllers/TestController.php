@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
+use App\Events\TestResultReady;
 use App\Models\Hospital;
 use App\Models\LabTechnician;
 use App\Models\patient;
@@ -151,5 +152,27 @@ class TestController extends Controller
 
         return response()->json(['message' => 'Webhook processed'], 200);
 
+    }
+
+    public function completeTest(Request $request, Test $test)
+    {
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'lab_technician_id' => 'required|exists:lab_technicians,id',
+            'test_results' => 'required|array',
+        ]);
+
+        // Update the Test record with results and status
+        $test->update([
+            'lab_technician_id' => $validated['lab_technician_id'],
+            'test_results' => $validated['test_results'],
+            'status' => 'completed',
+        ]);
+
+        // Trigger the TestResultReady event
+        event(new TestResultReady($test));
+
+        // Return a success response
+        return response()->json(['message' => 'Test completed']);
     }
 }
