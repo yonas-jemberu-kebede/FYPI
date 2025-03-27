@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Events\AppointmentConfirmed;
 use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
+use App\Events\TestResultReady;
 use App\Listeners\SendAppointmentConfirmedNotification;
 use App\Listeners\SendTestPaymentNotification;
+use App\Listeners\SendTestResultNotification;
 use App\Listeners\SendTestToConductNotification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             TestRequestConfirmed::class,
             SendTestToConductNotification::class
+        );
+        Event::listen(
+            TestResultReady::class,
+            SendTestResultNotification::class
         );
     }
 }
