@@ -10,7 +10,7 @@ class Pharmacist extends Model
     /** @use HasFactory<\Database\Factories\PharmacistFactory> */
     use HasFactory;
 
-    protected $fillable = ['first_name', 'last_name', 'email', 'pharmacy_id', 'gender', 'phone_number', 'date_of_birth'];
+    protected $guarded= [];
 
     public function user()
     {
@@ -21,4 +21,9 @@ class Pharmacist extends Model
     {
         return $this->belongsTo(Pharmacy::class);
     }
+
+    protected $casts=[
+       'shift_start'=>'datetime:H:i',
+       'shift_end'=>'datetime:H:i',
+    ];
 }
