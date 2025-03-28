@@ -10,7 +10,7 @@ class DiagnosticCenter extends Model
     /** @use HasFactory<\Database\Factories\DiagnosticCenterFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'hospital_id', 'email', 'phone_number'];
+    protected $guarded = [];
 
     public function hospital()
     {
