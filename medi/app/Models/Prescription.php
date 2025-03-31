@@ -10,12 +10,10 @@ class Prescription extends Model
     /** @use HasFactory<\Database\Factories\PrescriptionFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'patient_id',
-        'doctor_id',
-        'pharmacy_id',
-        'pharmacist_id',
-        'status',
+    protected $guarded = [];
+
+    protected $casts = [
+        'medications' => 'array',
     ];
 
     // Relationships
@@ -42,5 +40,15 @@ class Prescription extends Model
     public function payment()
     {
         return $this->morphOne(Payment::class, 'payable');
+    }
+
+    public function test()
+    {
+        return $this->belongsTo(Test::class);
+    }
+
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class);
     }
 }
