@@ -20,6 +20,16 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('account');
 
+            $table->string('city')->nullable();
+            $table->string('country')->nullable();
+            $table->decimal('latitude', 8, 2)->nullable();
+            $table->decimal('longitude', 8, 2)->nullable();
+
+            $table->integer('icu_capacity')->nullable();
+            $table->integer('established_year')->nullable();
+            $table->string('operating_hours')->nullable();
+            $table->string('hospital_type')->nullable();
+
             $table->timestamps();
         });
     }

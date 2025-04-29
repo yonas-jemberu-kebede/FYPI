@@ -39,7 +39,8 @@ Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, '
 //     });
 
 // });
-
+Route::delete('hospitals/{hospital}', [HospitalController::class, 'destroy']);
+// Route::put('hospitals/{hospital}', [HospitalController::class,'update']);
 Route::resource('patients', PatientController::class);
 Route::resource('hospitals', HospitalController::class);
 Route::resource('doctors', DoctorController::class);
