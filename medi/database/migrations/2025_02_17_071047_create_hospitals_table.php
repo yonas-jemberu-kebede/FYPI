@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('established_year')->nullable();
             $table->string('operating_hours')->nullable();
             $table->string('hospital_type')->nullable();
+            $table->string('image');
 
             $table->timestamps();
         });

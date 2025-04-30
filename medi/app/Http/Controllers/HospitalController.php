@@ -48,8 +48,14 @@ class HospitalController extends Controller
             'icu_capacity' => 'nullable|integer',
             'established_year' => 'nullable|integer',
             'operating_hours' => 'nullable|string',
+
+
+            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('hospitals', 'public');
+        }
         $hospital = Hospital::create(
             [
                 'name' => $validated['name'],
@@ -67,6 +73,7 @@ class HospitalController extends Controller
                 'icu_capacity' => $validated['icu_capacity'] ?? null,
 
                 'account' => encrypt($validated['account']),
+                'image' => $imagePath
             ]
         );
 
@@ -137,7 +144,7 @@ class HospitalController extends Controller
                 'hospital' => $hospital,
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Update failed: '.$e->getMessage()], 500);
+            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
         }
     }
 

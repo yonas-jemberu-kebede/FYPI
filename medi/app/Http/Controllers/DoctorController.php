@@ -7,7 +7,7 @@ use App\Models\Hospital;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Storage;
 class DoctorController extends Controller
 {
     /**
@@ -20,7 +20,6 @@ class DoctorController extends Controller
         return response()->json([
             'doctors in the hospital' => $hospitalDoctors,
         ]);
-
     }
 
     public function index()
@@ -46,9 +45,15 @@ class DoctorController extends Controller
             'gender' => 'required|in:Male,Female',
             'phone_number' => 'required|string|max:20',
             'hospital_id' => 'required|exists:hospitals,id',
+
+            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+
             'password' => 'required|string|min:6', // Needed for User creation
         ]);
 
+        if($request->hasFile('image')){
+           $imagePath=$request->file('image')->store('doctors','public');
+        }
         $doctor = Doctor::create(
             [
                 'first_name' => $validated['first_name'],
@@ -59,6 +64,7 @@ class DoctorController extends Controller
                 'gender' => $validated['gender'],
                 'phone_number' => $validated['phone_number'],
                 'hospital_id' => $validated['hospital_id'],
+                'image'=>$imagePath
             ]
         );
 
@@ -93,36 +99,55 @@ class DoctorController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Doctor $doctor)
     {
 
         // Fetch the Doctor
-        $doctor = Doctor::findOrFail($id);
+
 
         // Validate input while ignoring the current Doctor's email
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-
-            'email' => 'required|email|unique:users,email|unique:Doctors,email,'.$doctor->id,
-            'gender' => 'required|in:Male,Female',
-            'phone_number' => 'required|string|max:20',
-            'hospital_id' => 'required|exists:hospitals,id',
-            'password' => 'nullable|string|min:6', // Password is optional on update
+            'first_name' => 'sometimes|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
+            'date_of_birth' => 'somtimes|date',
+            'image' => 'somtimes|image|mimes:jpg,jpeg,png|max:2048',
+            'email' => 'sometimes|email|unique:users,email|unique:Doctors,email,' . $doctor->id,
+            'gender' => 'sometimes|in:Male,Female',
+            'phone_number' => 'sometimes|string|max:20',
+            'hospital_id' => 'sometimes|exists:hospitals,id',
+            'password' => 'sometimes|string|min:6', // Password is optional on update
         ]);
 
+        $imagePath = $doctor->image; // Keep existing image by default
+        if ($request->hasFile('image')) {
+            // Delete old image if it exists
+            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            // Store new image
+            $imagePath = $request->file('image')->store('doctors', 'public');
+        }
         // Update the Doctor record
-        $doctor->update($validated);
+        $doctor->update([
+            'first_name' => $validated['first_name'] ?? $doctor->first_name,
+            'last_name' => $validated['last_name'] ?? $doctor->last_name,
+            'date_of_birth' => $validated['date_of_birth'] ?? $doctor->date_of_birth,
+            'specialization' => $validated['specialization'] ?? $doctor->specialization,
+            'email' => $validated['email'] ?? $doctor->email,
+            'gender' => $validated['gender'] ?? $doctor->gender,
+            'phone_number' => $validated['phone_number'] ?? $doctor->phone_number,
+            'hospital_id' => $validated['hospital_id'] ?? $doctor->hospital_id,
+            'image' => $imagePath,
+        ]);
 
         // Find the corresponding user
-        $userToBeUpdated = User::where('associate_id', $id)->where('role', 'Doctor')->first();
+        $userToBeUpdated = User::where('associated_id', $doctor)->where('role', 'Doctor')->first();
 
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
             $updateData = [
-                'email' => $validated['email'],
-                'gender' => $validated['gender'],
+                'email' => $validated['email']??$userToBeUpdated->email,
+                'gender' => $validated['gender']??$userToBeUpdated->gender,
             ];
 
             // Only update password if provided
