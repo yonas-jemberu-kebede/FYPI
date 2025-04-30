@@ -10,6 +10,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
+use App\Mail\TestPaymentRequestEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,7 @@ Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, '
 
 // });
 Route::delete('hospitals/{hospital}', [HospitalController::class, 'destroy']);
+Route::put('/doctors/{doctor}', [DoctorController::class, 'update']);
 // Route::put('hospitals/{hospital}', [HospitalController::class,'update']);
 Route::resource('patients', PatientController::class);
 Route::resource('hospitals', HospitalController::class);
@@ -50,10 +52,17 @@ Route::resource('pharmacists', PharmacistController::class);
 Route::resource('labtechnicians', LabTechnicianController::class);
 
 Route::post('/appointments/book', [AppointmentController::class, 'book']);
+Route::get('/appointments/withDoctors', [AppointmentController::class, 'listDoctorsWithThierHospital']);
 
 Route::post('/appointments/pay', [PaymentController::class, 'initiatePayment']);
 
-Route::post('/webhook/chapa', [PaymentController::class, 'handleChapaWebhook']);
+Route::post('/webhook/chapa', [PaymentController::class, 'handleChapaWebhook'])->name('payment.return');
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::get('/testroute',function(){
+    $name="FUnny code";
+    Mail::to('jemeberuyonas01@gmail.com')->send(new TestPaymentRequestEmail($name));
+});
