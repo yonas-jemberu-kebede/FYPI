@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class AppointmentController extends Controller
 {
+
+    //for  fetching available hospitals in dashboard
     public function allHospitals()
     {
         $allHospitals = Hospital::get();
@@ -19,13 +21,21 @@ class AppointmentController extends Controller
             'allHospitals' => $allHospitals,
         ]);
     }
-
+// when specific hospital is choosen,hospital id will be captured and doctors who belongs there will be fetched in the page
     public function getDoctorsInHospital(Hospital $hospital)
     {
         $doctors = Doctor::where('hospital_id', $hospital->id)->get();
 
         return response()->json([
             'doctors' => $doctors,
+        ]);
+    }
+
+    public function listDoctorsWithThierHospital(){
+        $doctors=Doctor::with('hospital')->get();
+
+        return response()->json([
+            'doctor'=>$doctors
         ]);
     }
 
