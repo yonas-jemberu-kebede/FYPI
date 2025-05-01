@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-
+use App\Models\Pharmacist;
 class PharmacistSeeder extends Seeder
 {
     /**
@@ -11,6 +11,6 @@ class PharmacistSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Pharmacist::factory(5)->create();
     }
 }

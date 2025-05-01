@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DiagnosticCenter;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
+use Illuminate\Support\Facades\Hash;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\LabTechnician>
  */
@@ -18,12 +18,16 @@ class LabTechnicianFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
-            'email' => $this->faker->unique()->safeEmail,
+            'first_name' => fake()->firstName,
+            'last_name' => fake()->lastName,
+            'email' => fake()->unique()->safeEmail,
             'diagnostic_center_id' => DiagnosticCenter::factory(),
-            'gender' => $this->faker->randomElement(['Male', 'Female', 'Other']),
-            'phone_number' => $this->faker->phoneNumber,
+            'gender' => fake()->randomElement(['Male', 'Female']),
+            'phone_number' => fake()->phoneNumber,
+            'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
+            'shift_day' => fake()->randomElement(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+            'shift_start' => fake()->time('H:i:s', '08:00:00'),
+            'shift_end' => fake()->time('H:i:s', '17:00:00'),
         ];
     }
 }

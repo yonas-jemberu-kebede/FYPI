@@ -10,7 +10,7 @@ class LabTechnician extends Model
     /** @use HasFactory<\Database\Factories\LabTechnicianFactory> */
     use HasFactory;
 
-    protected $fillable = [];
+    protected $guarded = [];
 
     public function user()
     {
