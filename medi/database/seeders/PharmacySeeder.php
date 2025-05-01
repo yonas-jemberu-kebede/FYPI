@@ -12,6 +12,6 @@ class PharmacySeeder extends Seeder
      */
     public function run(): void
     {
-        Pharmacy::factory(2)->create();
+        Pharmacy::factory(4)->create();
     }
 }

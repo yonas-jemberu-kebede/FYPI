@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\LabTechnician;
 use Illuminate\Database\Seeder;
 
 class LabTechnicianSeeder extends Seeder
@@ -11,6 +12,6 @@ class LabTechnicianSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        LabTechnician::factory(6)->create();
     }
 }
