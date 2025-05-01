@@ -17,6 +17,7 @@ class PrescriptionOrdered implements ShouldBroadcast
      * Create a new event instance.
      */
     public $pendingPrescription;
+    public $payment;
 
     public function __construct(PendingPrescription $pendingPrescription)
     {
@@ -51,6 +52,8 @@ class PrescriptionOrdered implements ShouldBroadcast
             'medications' => $this->pendingPrescription->medications,
             'instructions' => $this->pendingPrescription->instructions,
             'hospital_id' => $this->pendingPrescription->test->hospital_id,
+
+            'checkout_url' => $this->payment->checkout_url
         ];
     }
 }
