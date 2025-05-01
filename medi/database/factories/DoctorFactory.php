@@ -26,6 +26,7 @@ class DoctorFactory extends Factory
             'gender' => $this->faker->randomElement(['Male', 'Female']),
             'phone_number' => $this->faker->phoneNumber,
             'date_of_birth' => $this->faker->date(),
+            'image' => 'hospitals/' . fake()->uuid . '.jpg',
         ];
     }
 }

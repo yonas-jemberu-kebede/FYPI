@@ -107,17 +107,19 @@ class DoctorController extends Controller
 
         // Validate input while ignoring the current Doctor's email
         $validated = $request->validate([
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'date_of_birth' => 'somtimes|date',
-            'image' => 'somtimes|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'sometimes|email|unique:users,email|unique:Doctors,email,' . $doctor->id,
-            'gender' => 'sometimes|in:Male,Female',
-            'phone_number' => 'sometimes|string|max:20',
-            'hospital_id' => 'sometimes|exists:hospitals,id',
-            'password' => 'sometimes|string|min:6', // Password is optional on update
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'email' => 'nullable|email|unique:users,email|unique:Doctors,email,' . $doctor,
+            'gender' => 'nullable|in:Male,Female',
+            'phone_number' => 'nullable|string|max:20',
+            'hospital_id' => 'nullable|exists:hospitals,id',
+            'password' => 'nullable|string|min:6', // Password is optional on update
         ]);
 
+        dd($validated);
+        
         $imagePath = $doctor->image; // Keep existing image by default
         if ($request->hasFile('image')) {
             // Delete old image if it exists
