@@ -21,10 +21,13 @@ class TestPaymentRequestEmail extends Mailable
 
     public $payment;
 
-    public function __construct(PendingTesting $pendingTesting, Payment $payment)
+    public function __construct()
     {
-        $this->pendingTesting = $pendingTesting;
-        $this->payment = $payment;
+
+        //PendingTesting $pendingTesting, Payment $payment
+
+        // $this->pendingTesting = $pendingTesting;
+        // $this->payment = $payment;
     }
 
     /**
@@ -43,14 +46,14 @@ class TestPaymentRequestEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
-            with: [
-                'patientName' => $this->pendingTesting->patient->firstName,
-                'testDetails' => $this->pendingTesting->test_requests,
-                'totalAmount' => $this->pendingTesting->total_amount,
-                'paymentLink' => $this->payment->checkout_url,
-            ]
-        );
+            view: 'mail.test',
+            // with: [
+            //     'patientName' => $this->pendingTesting->patient->firstName,
+            //     'testDetails' => $this->pendingTesting->test_requests,
+            //     'totalAmount' => $this->pendingTesting->total_amount,
+            //     'paymentLink' => $this->payment->checkout_url,
+            // ]
+            );
     }
 
     /**

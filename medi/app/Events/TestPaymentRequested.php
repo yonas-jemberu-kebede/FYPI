@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Payment;
 use App\Models\PendingTesting;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -16,10 +17,11 @@ class TestPaymentRequested
      * Create a new event instance.
      */
     public $pendingTesting;
-
-    public function __construct(PendingTesting $pendingTesting)
+    public $payment;
+    public function __construct(PendingTesting $pendingTesting, Payment $payment)
     {
         $this->pendingTesting = $pendingTesting;
+        $this->payment = $payment;
     }
 
     /**
@@ -30,7 +32,14 @@ class TestPaymentRequested
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PrivateChannel('patient.' . $this->pendingTesting->patient->id),
+        ];
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'checkout_url' => $this->payment->checkout_url
         ];
     }
 }

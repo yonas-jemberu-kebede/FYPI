@@ -33,6 +33,7 @@ class TestController extends Controller
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
 
         $now = Carbon::now();
+
         $currentDay = strtolower($now->dayName);
         $currentTime = $now->toTimeString();
 
@@ -52,7 +53,7 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
+        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
         $hospital = Hospital::where('hospital_id', $validated['hospital_id'])->get();
         $chapaSecretKey = $hospital->account;
 
@@ -60,7 +61,7 @@ class TestController extends Controller
         $email = $patient->email;
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$chapaSecretKey,
+            'Authorization' => 'Bearer ' . $chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -73,18 +74,21 @@ class TestController extends Controller
             return response()->json(['error' => 'Failed to initiate payment'], 500);
         }
         $responseData = $chapaResponse->json(); // converting the comming response from chapa into array
+        $checkoutUrl = $responseData['data']['checkout_url'];
 
-        payment::create([
+        $payment=payment::create([
             'tx_ref' => $txRef,
             'amount' => $totalAmount,
             'currency=>"ETB',
             'status' => 'pending',
             'payable_type' => PendingTesting::class,
             'payable_id' => $pendingTesting->id,
-            'checkout_url' => $responseData['data']['checkout_url'],
+            'checkout_url' => $checkoutUrl,
         ]);
 
-        event(new TestPaymentRequested($pendingTesting));
+        event(new TestPaymentRequested($pendingTesting, $payment));
+
+
 
         return response()->json([
             'checkout_url' => $responseData['data']['checkput_url'],
@@ -151,7 +155,6 @@ class TestController extends Controller
         }
 
         return response()->json(['message' => 'Webhook processed'], 200);
-
     }
 
     public function completeTest(Request $request, Test $test)
