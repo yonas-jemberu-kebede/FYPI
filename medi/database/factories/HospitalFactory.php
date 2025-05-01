@@ -17,21 +17,20 @@ class HospitalFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company().'Hospital',
-            'email' => fake()->unique()->email(),
-            'address' => fake()->address(),
-            'phone_number' => fake()->phoneNumber(),
-            'account' => 'CHASECK_TEST - 4 M3phlAp4st05LGUAjM3c3oBonocWghg',
+            'name' => fake()->company . ' Hospital',
+            'email' => fake()->unique()->safeEmail,
+            'phone_number' => fake()->phoneNumber,
+            'address' => fake()->streetAddress,
+            'account' => encrypt(fake()->bankAccountNumber),
             'city' => fake()->city,
             'country' => fake()->country,
-            'latitude' => fake()->latitude,
-            'longitude' => fake()->longitude,
-
-            'hospital_type' => fake()->randomElement(['Public', 'Private', 'Specialized', 'Teaching']),
+            'latitude' => fake()->latitude(-90, 90),
+            'longitude' => fake()->longitude(-180, 180),
+            'hospital_type' => fake()->randomElement(['General', 'Specialized', 'Clinic', 'Teaching']),
+            'icu_capacity' => fake()->numberBetween(0, 100),
             'established_year' => fake()->year,
-            'operating_hours' => fake()->randomElement(['24/7', '8AM-8PM', '9AM-5PM']),
-            'icu_capacity' => fake()->numberBetween(5, 50),
-
+            'operating_hours' => fake()->randomElement(['24/7', '9 AM - 5 PM', '8 AM - 8 PM']),
+            'image' => 'hospitals/' . fake()->uuid . '.jpg',
         ];
     }
 }
