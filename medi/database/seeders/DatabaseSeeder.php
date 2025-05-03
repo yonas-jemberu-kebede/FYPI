@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\LabTechnician;
-use App\Models\Pharmacist;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -23,6 +21,9 @@ class DatabaseSeeder extends Seeder
             DiagnosticCenterSeeder::class,
             LabTechnicianSeeder::class,
             PharmacistSeeder::class,
+            TestPriceSeeder::class,
+            MedicationInventorySeeder::class,
+            TestSeeder::class,
         ]);
     }
 }

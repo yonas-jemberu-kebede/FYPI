@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\TestPrice;
 use Illuminate\Database\Seeder;
 
 class TestPriceSeeder extends Seeder
@@ -11,6 +12,6 @@ class TestPriceSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        TestPrice::factory(7)->create();
     }
 }

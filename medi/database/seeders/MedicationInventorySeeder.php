@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\Pharmacist;
+use App\Models\MedicationInventory;
 use Illuminate\Database\Seeder;
 
-class PharmacistSeeder extends Seeder
+class MedicationInventorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Pharmacist::factory(5)->create();
+        MedicationInventory::factory(2)->create();
     }
 }
