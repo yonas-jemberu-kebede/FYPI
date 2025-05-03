@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Pharmacy;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
+
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Pharmacist>
  */
@@ -24,7 +24,7 @@ class PharmacistFactory extends Factory
             'email' => fake()->unique()->safeEmail,
             'gender' => fake()->randomElement(['Male', 'Female']),
             'phone_number' => fake()->phoneNumber,
-            'pharmacy_id' => Pharmacy::factory(), 
+            'pharmacy_id' => Pharmacy::factory(),
             'shift_day' => fake()->randomElement(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
             'shift_start' => fake()->time('H:i:s', '08:00:00'),
             'shift_end' => fake()->time('H:i:s', '17:00:00'),

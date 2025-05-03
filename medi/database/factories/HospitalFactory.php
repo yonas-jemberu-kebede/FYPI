@@ -17,7 +17,7 @@ class HospitalFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company . ' Hospital',
+            'name' => fake()->company.' Hospital',
             'email' => fake()->unique()->safeEmail,
             'phone_number' => fake()->phoneNumber,
             'address' => fake()->streetAddress,
@@ -30,7 +30,7 @@ class HospitalFactory extends Factory
             'icu_capacity' => fake()->numberBetween(0, 100),
             'established_year' => fake()->year,
             'operating_hours' => fake()->randomElement(['24/7', '9 AM - 5 PM', '8 AM - 8 PM']),
-            'image' => 'hospitals/' . fake()->uuid . '.jpg',
+            'image' => 'hospitals/'.fake()->uuid.'.jpg',
         ];
     }
 }

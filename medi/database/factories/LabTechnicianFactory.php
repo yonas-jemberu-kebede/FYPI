@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DiagnosticCenter;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
+
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\LabTechnician>
  */
