@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentConfirmed implements ShouldBroadcast
 {
@@ -21,6 +22,11 @@ class AppointmentConfirmed implements ShouldBroadcast
     public function __construct(Appointment $appointment)
     {
         $this->appointment = $appointment;
+
+        Log::info('AppointmentConfirmed event fired', [
+            'appointment_id' => $appointment->id,
+            'patient_id' => $appointment->patient_id,
+        ]);
     }
 
     /**
