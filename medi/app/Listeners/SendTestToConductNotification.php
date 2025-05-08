@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\TestRequestConfirmed;
 use App\Models\Notification;
+use Illuminate\Support\Facades\Log;
 
 class SendTestToConductNotification
 {
@@ -22,7 +23,7 @@ class SendTestToConductNotification
     {
         $test = $event->test;
 
-        Notification::create([
+        $notification = [
             'type' => 'appointment.confirmed',
             'notifiable_type' => 'App\Models\LabTechnician',
             'notifiable_id' => $test->labTechnician->id,
@@ -32,6 +33,22 @@ class SendTestToConductNotification
                 'test_date' => $test->test_date,
 
             ],
-        ]);
+        ];
+
+        $exists = Notification::where([
+
+            'type' => $notification['type'],
+            'notifiable_type' => $notification['notifiable_type'],
+            'notifiable_id' => $notification['notifiable_id'],
+
+        ])->exists();
+
+        if (! $exists) {
+            Notification::create($notification);
+            Log::info('Notification created', $notification);
+        } else {
+            Log::warning('Duplicate notification skipped', $notification);
+        }
+
     }
 }
