@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Mail\HospitalMail;
 use App\Models\Hospital;
-use App\Models\User;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class HospitalController extends Controller
 {
@@ -36,7 +36,7 @@ class HospitalController extends Controller
             'address' => 'required|string',
             'account' => 'required|string',
             'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'password' => 'required|string|min:8', //confirmed
+            'password' => 'required|string|min:8', // confirmed
 
             'city' => 'nullable|string',
             'country' => 'nullable|string',
@@ -55,11 +55,9 @@ class HospitalController extends Controller
             'hospital_type' => 'nullable|string',
             'icu_capacity' => 'nullable|integer',
             'established_year' => 'nullable|integer',
-            'operating_hours' => 'nullable|string'
+            'operating_hours' => 'nullable|string',
         ]);
 
-
-        dump($validated);
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('hospitals', 'public');
         }
@@ -84,8 +82,6 @@ class HospitalController extends Controller
             ]
         );
 
-        dump($hospital);
-
         $user = User::create(
             [
                 'email' => $validated['email'],
@@ -94,7 +90,6 @@ class HospitalController extends Controller
                 'associated_id' => $hospital->id, // Link to the patient
             ]
         );
-        dump($user);
 
         Mail::to($hospital->email)->send(new HospitalMail($hospital, $validated['password']));
 
@@ -164,7 +159,7 @@ class HospitalController extends Controller
                 'hospital' => $hospital,
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Update failed: '.$e->getMessage()], 500);
         }
     }
 

@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\Hospital;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,12 +14,13 @@ class HospitalMail extends Mailable
     use Queueable, SerializesModels;
 
     public $hospital;
+
     public $password;
+
     /**
      * Create a new message instance.
      */
-
-    public function __construct(Hospital $hospital,string $password)
+    public function __construct(Hospital $hospital, string $password)
     {
         $this->hospital = $hospital;
         $this->password = $password;
@@ -46,9 +46,8 @@ class HospitalMail extends Mailable
             with: [
                 'hospital_name' => $this->hospital->name,
                 'hospital_email' => $this->hospital->email,
-                'password' => $this->password
+                'password' => $this->password,
             ]
-
 
         );
     }
