@@ -4,199 +4,165 @@ namespace App\Http\Controllers;
 
 use App\Events\PrescriptionOrdered;
 use App\Events\PrescriptionRequestConfirmed;
+use App\Models\Hospital;
+use App\Models\MedicationInventory;
+use App\Models\Patient;
+use App\Models\Payment;
 use App\Models\PendingPrescription;
 use App\Models\Pharmacist;
+use App\Models\Prescription;
 use carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\MedicationInventory;
-use App\Models\Payment;
-use App\Models\Hospital;
-use App\Models\Patient;
-use App\Models\Prescription;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class PrescriptionController extends Controller
 {
     public function makeRequest(Request $request)
     {
+        // Validate input
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
             'hospital_id' => 'required|exists:hospitals,id',
             'pharmacy_id' => 'required|exists:pharmacies,id',
             'test_id' => 'nullable|exists:tests,id',
-
             'medications' => 'required|array',
             'medications.*.name' => 'required|string',
             'medications.*.dosage' => 'required|string',
             'medications.*.frequency' => 'required|string',
             'medications.*.items' => 'required|integer|min:0',
-
             'instructions' => 'nullable|string',
-
+            'status' => 'nullable|in:pending,confirmed,cancelled', // Add status validation
         ]);
 
-
-
-
         $medications = $validated['medications'];
-
         $totalAmount = 0;
+        $validMedications = [];
 
+        // Calculate total cost and validate medication stock
         foreach ($medications as $medication) {
-            // Check if medication exists and has sufficient quantity
             $inventory = MedicationInventory::where('medication_name', $medication['name'])->first();
 
-            // Skip if medication doesn't exist or has insufficient stock
-            if (!$inventory || $inventory->quantity_available < $medication['items']) {
-                continue;
+            if (! $inventory) {
+                return response()->json(['error' => "Medication '{$medication['name']}' not found"], 400);
             }
 
-            // Add to valid medications and calculate cost
+            if ($inventory->quantity_available < $medication['items']) {
+                return response()->json(['error' => "Insufficient stock for '{$medication['name']}'"], 400);
+            }
 
+            $validMedications[] = $medication;
             $totalAmount += $inventory->price_per_unit * $medication['items'];
         }
 
-        // Step 3: Check if any valid medications rema
+        if (empty($validMedications)) {
+            return response()->json(['message' => 'No valid medications provided'], 400);
+        }
 
-        /* saving the time and date requested */
+        // Get current time and day
         $now = Carbon::now();
-
         $currentDay = strtolower($now->dayName);
         $currentTime = $now->toTimeString();
 
-
-        /* fetching the pharmacist */
+        // Find available pharmacist
         $pharmacist = Pharmacist::where('shift_day', $currentDay)
             ->where('shift_start', '<=', $currentTime)
             ->where('shift_end', '>=', $currentTime)
-            ->firstOrFail();
+            ->first();
 
-        /* to store the requested data temporarily until it get */
-
-        $pendingPrescription = PendingPrescription::create(
-            [
-                'patient_id' => $validated['patient_id'],
-                'doctor_id' => $validated['doctor_id'],
-                'hospital_id' => $validated['hospital_id'],
-                'pharmacy_id' => $validated['pharmacy_id'],
-                'test_id' => $validated['test_id'],
-                'pharmacist_id' => $pharmacist->id,
-
-                'medications' => $validated['medications'],
-                'instructions' => $validated['instructions'],
-
-                'status' => $validated['status'] ?? 'pending',
-
-            ]
-        );
-        $txRef = 'PRESCRIPTION-' . $pendingPrescription->id . '-' . time();
-
-
-        $hospital = Hospital::where('id', $validated['hospital_id'])->first();
-
-        $chapaSecretKey = $hospital->account;
-
-        $patient = Patient::where('patient_id', $validated['patient_id'])->get();
-        $email = $patient->email;
-
-        if ($totalAmount > 0) {
-
-            $chapaResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $chapaSecretKey,
-            ])->post('https://api.chapa.co/v1/transaction/initialize', [
-                'amount' => $totalAmount,
-                'currency' => 'ETB',
-                'email' => $email,
-                'tx_ref' => $txRef,
-                'callback_url' => 'https://d0c4-149-102-244-114.ngrok-free.app/api/webhook/chapa',
-            ]);
-
-            if ($chapaResponse->failed()) {
-                return response()->json(['error' => 'Failed to initiate payment'], 500);
-            }
-            $responseData = $chapaResponse->json(); // converting the comming response from chapa into array
-
-            $payment = payment::create([
-                'tx_ref' => $txRef,
-                'amount' => $totalAmount,
-                'currency=>"ETB',
-                'status' => 'pending',
-                'payable_type' => PendingPrescription::class,
-                'payable_id' => $pendingPrescription->id,
-                'checkout_url' => $responseData['data']['checkout_url'],
-            ]);
-
-            event(new PrescriptionOrdered($pendingPrescription, $payment));
-            return response()->json(['checkout_url' => $responseData['data']['checkput_url']], 200);
+        if (! $pharmacist) {
+            return response()->json(['error' => 'No pharmacist available at this time'], 400);
         }
-        return response()->json(['message' => "no payment request"], 200);
+
+        // Create pending prescription
+        $pendingPrescription = PendingPrescription::create([
+            'patient_id' => $validated['patient_id'],
+            'doctor_id' => $validated['doctor_id'],
+            'hospital_id' => $validated['hospital_id'],
+            'pharmacy_id' => $validated['pharmacy_id'],
+            'test_id' => $validated['test_id'],
+            'pharmacist_id' => $pharmacist->id,
+            'medications' => $validMedications,
+            'instructions' => $validated['instructions'],
+            'status' => $validated['status'] ?? 'pending',
+        ]);
+
+        // If no payment required, return early
+        if ($totalAmount <= 0) {
+            return response()->json(['message' => 'No payment required'], 200);
+        }
+
+        // Initialize payment
+        $txRef = 'PRESCRIPTION-'.$pendingPrescription->id.'-'.time();
+        $hospital = Hospital::findOrFail($validated['hospital_id']);
+        $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
+
+        $chapaResponse = Http::withHeaders([
+            'Authorization' => 'Bearer '.$hospital->account,
+        ])->post('https://api.chapa.co/v1/transaction/initialize', [
+            'amount' => $totalAmount,
+            'currency' => 'ETB',
+            'email' => $patient->email,
+            'tx_ref' => $txRef,
+            'return_url' => route('prescription.return', ['txRef' => $txRef]),
+        ]);
+
+        if ($chapaResponse->failed() || ! isset($chapaResponse['data']['checkout_url'])) {
+            return response()->json(['error' => 'Failed to initiate payment'], 500);
+        }
+
+        $responseData = $chapaResponse->json();
+        $pendingPrescription->update(['tx_ref' => $txRef]);
+
+        // Store payment details
+        $payment = Payment::create([
+            'tx_ref' => $txRef,
+            'amount' => $totalAmount,
+            'currency' => 'ETB',
+            'status' => 'pending',
+            'payable_type' => PendingPrescription::class,
+            'payable_id' => $pendingPrescription->id,
+            'checkout_url' => $responseData['data']['checkout_url'],
+        ]);
+
+        // Trigger event
+        event(new PrescriptionOrdered($pendingPrescription, $payment));
+
+        return response()->json(['checkout_url' => $responseData['data']['checkout_url']], 200);
     }
 
-    public function webhookHandlingForPrescription(Request $request)
+    public function webhookHandlingForPrescription(Request $request, $txRef)
     {
-        $payload = $request->getContent();
-        Log::info('Chapa Webhook Received', [
-            'raw_payload' => $payload,
-            'headers' => $request->headers->all(),
-        ]);
-        // Check for empty payload
-        if (empty($payload)) {
-            Log::warning('Empty payload received');
 
-            return response()->json(['error' => 'Empty payload'], 400);
-        }
-
-        $data = json_decode($payload, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            Log::error('Invalid JSON', ['payload' => $payload]);
-
-            return response()->json(['error' => 'Invalid JSON'], 400);
-        }
-
-        // Extract tx_ref and status from the payload
-        $txRef = $data['tx_ref'] ?? null;
-        $status = $data['status'] ?? null;
-
-        if (! $txRef || ! $status) {
-            Log::error('Missing fields', ['data' => $data]);
-
-            return response()->json(['error' => 'Missing data'], 400);
-        }
-
-        // Find the Payment record by tx_ref
         $payment = Payment::where('tx_ref', $txRef)->firstOrFail();
-        $payment->update(['status' => $status]);
+        $payment->update(['status' => 'success']);
 
-        if ($status === 'success' && $payment->payable_type === PendingPrescription::class) {
-            $pendingPrescription = $payment->payable;
-            $prescription = Prescription::create([
-                'patient_id' => $pendingPrescription->patient_id,
-                'doctor_id' => $pendingPrescription->doctor_id,
-                'hospital_id' => $pendingPrescription->hospital_id,
-                'pharmacist_id' => $pendingPrescription->pharmacist_id,
-                'pharmacy_id' => $pendingPrescription->pharmacy_id,
-                'test_id' => $pendingPrescription->test_id,
+        $pendingPrescription = PendingPrescription::where('tx_ref', $txRef)->firstOrFail();
 
+        $prescription = Prescription::create([
+            'patient_id' => $pendingPrescription->patient_id,
+            'doctor_id' => $pendingPrescription->doctor_id,
+            'hospital_id' => $pendingPrescription->hospital_id,
+            'pharmacist_id' => $pendingPrescription->pharmacist_id,
+            'pharmacy_id' => $pendingPrescription->pharmacy_id,
+            'test_id' => $pendingPrescription->test_id,
 
-                'status' => $pendingPrescription->pharmacist_id ? 'assigned' : 'requested',
-                'medications' => $pendingPrescription->medications,
-                'instructions' => $pendingPrescription->instructions,
+            'status' => $pendingPrescription->pharmacist_id ? 'assigned' : 'requested',
+            'medications' => $pendingPrescription->medications,
+            'instructions' => $pendingPrescription->instructions,
 
+        ]);
 
-            ]);
-            $payment->update(
-                [
-                    'payable_type' => Prescription::class,
-                    'payable_id' => $prescription->id,
-                ]
-            );
+        $payment->update(
+            [
+                'payable_type' => Prescription::class,
+                'payable_id' => $prescription->id,
+            ]
+        );
 
-            $pendingPrescription->delete();
+        $pendingPrescription->delete();
 
-            event(new PrescriptionRequestConfirmed($prescription));
-        }
+        event(new PrescriptionRequestConfirmed($prescription));
 
         return response()->json(['message' => 'Webhook processed'], 200);
     }
