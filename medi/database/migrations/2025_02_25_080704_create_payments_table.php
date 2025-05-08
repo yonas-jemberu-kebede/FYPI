@@ -16,9 +16,11 @@ return new class extends Migration
             $table->string('tx_ref')->unique();
             $table->decimal('amount', 8, 2);
             $table->string('currency')->default('ETB');
-            $table->string('status')->default('pending');
+
+            $table->string('status')->default('pending')->nullable();
             $table->string('payable_type');
             $table->unsignedBigInteger('payable_id')->nullable();
+
             $table->string('checkout_url')->nullable();
             $table->foreignId('patient_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();

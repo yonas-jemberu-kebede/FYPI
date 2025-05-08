@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pending_bookings', function (Blueprint $table) {
+        Schema::create('medication_inventories', function (Blueprint $table) {
             $table->id();
-            $table->string('tx_ref')->unique();
-            $table->json('data');
-
-            $table->unsignedBigInteger('payment_id')->nullable();
             $table->foreignId('hospital_id')->constrained()->cascadeOnDelete();
+            $table->string('medication_name')->unique();
+            $table->decimal('price_per_unit', 8, 2);
+            $table->integer('quantity_available');
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pending_bookings');
+        Schema::dropIfExists('medication_inventories');
     }
 };

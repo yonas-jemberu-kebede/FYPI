@@ -14,10 +14,15 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->string('type');
+            $table->string('notifiable_type');
+            $table->unsignedBigInteger('notifiable_id');
             $table->json('data');
-            $table->morphs('notifiable');
-            $table->timestamp('read_at')->nullable();
+            $table->datetime('read_at')->default(null)->nullable();
+            // Add a generated column for appointment_id
+            $table->unsignedBigInteger('appointment_id')->nullable()->stored()->generatedAs('JSON_UNQUOTE(JSON_EXTRACT(data, "$.appointment_id"))');
             $table->timestamps();
+            // Unique constraint including the generated column
+            $table->unique(['notifiable_type', 'notifiable_id', 'type', 'appointment_id'], 'unique_notification');
         });
     }
 

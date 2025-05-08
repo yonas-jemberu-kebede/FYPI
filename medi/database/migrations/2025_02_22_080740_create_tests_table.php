@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
             $table->foreignId('doctor_id')->constrained('doctors')->cascadeOnDelete();
+            $table->foreignId('hospital_id')->constrained('hospitals')->cascadeOnDelete();
             $table->foreignId('lab_technician_id')->nullable()->constrained()->cascadeOnDelete();
 
             $table->decimal('total_amount', 8, 2);
             $table->string('status')->default('pending');
+
             $table->json('test_requests');
             $table->json('test_results')->nullable();
             $table->date('test_date')->nullable();

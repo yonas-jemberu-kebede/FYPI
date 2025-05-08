@@ -20,6 +20,8 @@ return new class extends Migration
             $table->foreignId('pharmacy_id')->constrained('pharmacies')->onDelete('cascade');
             $table->foreignId('pharmacist_id')->nullable()->constrained()->onDelete('cascade');
 
+            $table->string('tx_ref')->nullable();
+
             $table->string('status')->default('pending');
             $table->json('medications'); // e.g., [{"name": "Aspirin", "dosage": "500mg", "frequency": "daily"}]
             $table->text('instructions')->nullable();

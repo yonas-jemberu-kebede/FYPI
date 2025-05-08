@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('hospital_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lab_technician_id')->nullable()->constrained()->cascadeOnDelete();
 
             $table->json('test_requests');
