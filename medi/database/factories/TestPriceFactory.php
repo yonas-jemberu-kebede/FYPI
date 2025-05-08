@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\DiagnosticCenter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,10 @@ class TestPriceFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'test_name' => $this->faker->words(2, true), // e.g., "Blood Test"
+            'price' => $this->faker->randomFloat(2, 10, 500), // e.g., 150.00
+            'diagnostic_center_id' => DiagnosticCenter::factory(), // Creates a new DiagnosticCenter or references an existing one
+
         ];
     }
 }
