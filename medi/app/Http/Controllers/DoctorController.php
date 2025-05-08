@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Doctor;
 use App\Models\Hospital;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+
 class DoctorController extends Controller
 {
     /**
@@ -51,8 +53,8 @@ class DoctorController extends Controller
             'password' => 'required|string|min:6', // Needed for User creation
         ]);
 
-        if($request->hasFile('image')){
-           $imagePath=$request->file('image')->store('doctors','public');
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('doctors', 'public');
         }
         $doctor = Doctor::create(
             [
@@ -64,7 +66,7 @@ class DoctorController extends Controller
                 'gender' => $validated['gender'],
                 'phone_number' => $validated['phone_number'],
                 'hospital_id' => $validated['hospital_id'],
-                'image'=>$imagePath
+                'image' => $imagePath,
             ]
         );
 
@@ -104,14 +106,13 @@ class DoctorController extends Controller
 
         // Fetch the Doctor
 
-
         // Validate input while ignoring the current Doctor's email
         $validated = $request->validate([
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:Doctors,email,' . $doctor,
+            'email' => 'nullable|email|unique:users,email|unique:Doctors,email,'.$doctor,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -119,7 +120,7 @@ class DoctorController extends Controller
         ]);
 
         dd($validated);
-        
+
         $imagePath = $doctor->image; // Keep existing image by default
         if ($request->hasFile('image')) {
             // Delete old image if it exists
@@ -148,8 +149,8 @@ class DoctorController extends Controller
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
             $updateData = [
-                'email' => $validated['email']??$userToBeUpdated->email,
-                'gender' => $validated['gender']??$userToBeUpdated->gender,
+                'email' => $validated['email'] ?? $userToBeUpdated->email,
+                'gender' => $validated['gender'] ?? $userToBeUpdated->gender,
             ];
 
             // Only update password if provided
@@ -193,5 +194,25 @@ class DoctorController extends Controller
             'doctor_deleted' => $doctorToDelete,
             'user_deleted' => $userDeleted,
         ], 200);
+    }
+
+    public function fetchNotificationsFromDB(Doctor $doctor)
+    {
+
+        // dd($doctor);
+
+        $notifications = Notification::where('notifiable_id', $doctor->id)
+            ->where('notifiable_type', 'App\Models\Doctor')
+            ->whereNull('read_at')
+            ->get();
+
+        // Map notifications to extract the 'message' from each 'data' array
+        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+
+        return response()->json([
+            'message' => 'Notifications you haven’t read',
+            'notifications' => $notificationMessages,
+        ]);
+
     }
 }
