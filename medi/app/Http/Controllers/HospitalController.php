@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hospital;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class HospitalController extends Controller
@@ -30,6 +31,7 @@ class HospitalController extends Controller
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
             'account' => 'required|string',
+            
             'city' => 'nullable|string',
             'country' => 'nullable|string',
             'latitude' => [
@@ -48,7 +50,6 @@ class HospitalController extends Controller
             'icu_capacity' => 'nullable|integer',
             'established_year' => 'nullable|integer',
             'operating_hours' => 'nullable|string',
-
 
             'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -73,7 +74,7 @@ class HospitalController extends Controller
                 'icu_capacity' => $validated['icu_capacity'] ?? null,
 
                 'account' => encrypt($validated['account']),
-                'image' => $imagePath
+                'image' => $imagePath,
             ]
         );
 
@@ -144,7 +145,7 @@ class HospitalController extends Controller
                 'hospital' => $hospital,
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Update failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -157,6 +158,25 @@ class HospitalController extends Controller
             'message' => 'Hospital record deleted successfully',
             'record deleted for Hospital' => $hospital,
 
+        ]);
+    }
+
+    public function fetchNotificationsFromDB(Hospital $hospital)
+    {
+
+        // dd($doctor);
+
+        $notifications = Notification::where('notifiable_id', $hospital->id)
+            ->where('notifiable_type', 'App\Models\Hospital')
+            ->whereNull('read_at')
+            ->get();
+
+        // Map notifications to extract the 'message' from each 'data' array
+        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+
+        return response()->json([
+            'message' => 'Notifications you haven’t read',
+            'notifications' => $notificationMessages,
         ]);
     }
 }
