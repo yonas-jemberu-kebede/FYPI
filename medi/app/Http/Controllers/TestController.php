@@ -15,7 +15,6 @@ use App\Models\TestPrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
@@ -29,7 +28,7 @@ class TestController extends Controller
 
             'test_ids' => 'required|array|exists:test_prices,id',
         ]);
-        $testIds = $validated['test_id'];
+        $testIds = $validated['test_ids'];
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
 
         $now = Carbon::now();
@@ -37,11 +36,11 @@ class TestController extends Controller
         $currentDay = strtolower($now->dayName);
         $currentTime = $now->toTimeString();
 
-        $labTechnician = LabTechnician::where('hospital_id', $validated['hospital_id'])
-            ->where('shift_day', $currentDay)
+        $labTechnician = LabTechnician::where('shift_day', $currentDay)
             ->where('shift_start', '<=', $currentTime)
             ->where('shift_end', '>=', $currentTime)
-            ->first();
+            ->firstOrFail();
+
         $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
         $pendingTesting = PendingTesting::create([
@@ -53,21 +52,23 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
-        $hospital = Hospital::where('hospital_id', $validated['hospital_id'])->get();
+        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
+
+        $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
         $chapaSecretKey = $hospital->account;
 
-        $patient = Patient::where('patient_id', $validated['patient_id'])->get();
+        $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
         $email = $patient->email;
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $chapaSecretKey,
+            'Authorization' => 'Bearer '.$chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
             'email' => $email,
             'tx_ref' => $txRef,
-            'callback_url' => 'https://d0c4-149-102-244-114.ngrok-free.app/api/webhook/chapa',
+            'return_url' => route('test.return', ['txRef' => $txRef]),
+
         ]);
 
         if ($chapaResponse->failed()) {
@@ -76,83 +77,57 @@ class TestController extends Controller
         $responseData = $chapaResponse->json(); // converting the comming response from chapa into array
         $checkoutUrl = $responseData['data']['checkout_url'];
 
-        $payment=payment::create([
+        $pendingTesting->update(['tx_ref' => $txRef]);
+
+        $payment = payment::create([
+
             'tx_ref' => $txRef,
             'amount' => $totalAmount,
-            'currency=>"ETB',
+            'currency' => 'ETB',
             'status' => 'pending',
             'payable_type' => PendingTesting::class,
             'payable_id' => $pendingTesting->id,
             'checkout_url' => $checkoutUrl,
+
         ]);
 
         event(new TestPaymentRequested($pendingTesting, $payment));
 
-
-
         return response()->json([
-            'checkout_url' => $responseData['data']['checkput_url'],
+            'checkout_url' => $responseData['data']['checkout_url'],
         ]);
     }
 
-    public function webhookHandlingForTesting(Request $request)
+    public function webhookHandlingForTesting(Request $request, $txRef)
     {
-        $payload = $request->getContent();
-        Log::info('Chapa Webhook Received', [
-            'raw_payload' => $payload,
-            'headers' => $request->headers->all(),
-        ]);
-        // Check for empty payload
-        if (empty($payload)) {
-            Log::warning('Empty payload received');
-
-            return response()->json(['error' => 'Empty payload'], 400);
-        }
-
-        $data = json_decode($payload, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            Log::error('Invalid JSON', ['payload' => $payload]);
-
-            return response()->json(['error' => 'Invalid JSON'], 400);
-        }
-
-        // Extract tx_ref and status from the payload
-        $txRef = $data['tx_ref'] ?? null;
-        $status = $data['status'] ?? null;
-
-        if (! $txRef || ! $status) {
-            Log::error('Missing fields', ['data' => $data]);
-
-            return response()->json(['error' => 'Missing data'], 400);
-        }
 
         // Find the Payment record by tx_ref
         $payment = Payment::where('tx_ref', $txRef)->firstOrFail();
-        $payment->update(['status' => $status]);
+        $payment->update(['status' => 'success']);
+        $pendingTesting = PendingTesting::where('tx_ref', $txRef)->firstOrFail();
 
-        if ($status === 'success' && $payment->payable_type === PendingTesting::class) {
-            $pendingTesting = $payment->payable;
-            $test = Test::create([
-                'patient_id' => $pendingTesting->patient_id,
-                'doctor_id' => $pendingTesting->doctor_id,
-                'hospital_id' => $pendingTesting->hospital_id,
-                'lab_technician_id' => $pendingTesting->lab_technician_id,
-                'amount' => $pendingTesting->total_amount,
-                'status' => $pendingTesting->lab_technician_id ? 'assigned' : 'requested',
-                'test_requests' => $pendingTesting->test_requests,
-                'test_date' => now()->addDay(),
-            ]);
-            $payment->update(
-                [
-                    'payable_type' => Test::class,
-                    'payable_id' => $test->id,
-                ]
-            );
+        dump($pendingTesting);
 
-            $pendingTesting->delete();
+        $test = Test::create([
+            'patient_id' => $pendingTesting->patient_id,
+            'doctor_id' => $pendingTesting->doctor_id,
+            'hospital_id' => $pendingTesting->hospital_id,
+            'lab_technician_id' => $pendingTesting->lab_technician_id,
+            'total_amount' => $pendingTesting->total_amount,
+            'status' => $pendingTesting->lab_technician_id ? 'assigned' : 'requested',
+            'test_requests' => $pendingTesting->test_requests,
+            'test_date' => now()->addDay(),
+        ]);
+        $payment->update(
+            [
+                'payable_type' => Test::class,
+                'payable_id' => $test->id,
+            ]
+        );
 
-            event(new TestRequestConfirmed($test));
-        }
+        $pendingTesting->delete();
+
+        event(new TestRequestConfirmed($test));
 
         return response()->json(['message' => 'Webhook processed'], 200);
     }
