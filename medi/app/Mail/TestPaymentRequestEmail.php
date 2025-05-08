@@ -24,7 +24,7 @@ class TestPaymentRequestEmail extends Mailable
     public function __construct()
     {
 
-        //PendingTesting $pendingTesting, Payment $payment
+        // PendingTesting $pendingTesting, Payment $payment
 
         // $this->pendingTesting = $pendingTesting;
         // $this->payment = $payment;
@@ -53,7 +53,7 @@ class TestPaymentRequestEmail extends Mailable
             //     'totalAmount' => $this->pendingTesting->total_amount,
             //     'paymentLink' => $this->payment->checkout_url,
             // ]
-            );
+        );
     }
 
     /**
