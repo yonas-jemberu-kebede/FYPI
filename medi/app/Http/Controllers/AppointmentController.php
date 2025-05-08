@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AppointmentController extends Controller
 {
-
-    //for  fetching available hospitals in dashboard
+    // for  fetching available hospitals in dashboard
     public function allHospitals()
     {
         $allHospitals = Hospital::get();
@@ -21,7 +20,8 @@ class AppointmentController extends Controller
             'allHospitals' => $allHospitals,
         ]);
     }
-// when specific hospital is choosen,hospital id will be captured and doctors who belongs there will be fetched in the page
+
+    // when specific hospital is choosen,hospital id will be captured and doctors who belongs there will be fetched in the page
     public function getDoctorsInHospital(Hospital $hospital)
     {
         $doctors = Doctor::where('hospital_id', $hospital->id)->get();
@@ -31,11 +31,12 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function listDoctorsWithThierHospital(){
-        $doctors=Doctor::with('hospital')->get();
+    public function listDoctorsWithThierHospital()
+    {
+        $doctors = Doctor::with('hospital')->get();
 
         return response()->json([
-            'doctor'=>$doctors
+            'doctor' => $doctors,
         ]);
     }
 
@@ -93,7 +94,7 @@ class AppointmentController extends Controller
         ];
 
         // Step 5: Create pending booking
-        PendingBooking::create([
+        $pendingBooking = PendingBooking::create([
             'tx_ref' => $txRef,
             'data' => $pendingData,
             'payment_id' => null,
