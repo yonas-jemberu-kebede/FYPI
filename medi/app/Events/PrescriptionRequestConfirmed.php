@@ -3,11 +3,8 @@
 namespace App\Events;
 
 use App\Models\Prescription;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,11 +15,11 @@ class PrescriptionRequestConfirmed
     /**
      * Create a new event instance.
      */
+    public $prescription;
 
-     public $prescription;
     public function __construct(Prescription $prescription)
     {
-        $this->prescription=$prescription;
+        $this->prescription = $prescription;
     }
 
     /**
@@ -33,7 +30,7 @@ class PrescriptionRequestConfirmed
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('pharmacist' . $this->prescription->pharmacist->id),
+            new PrivateChannel('pharmacist'.$this->prescription->pharmacist->id),
         ];
     }
 
@@ -45,7 +42,7 @@ class PrescriptionRequestConfirmed
     public function broadcastWith()
     {
         return [
-            'pharmacistMessage' => "Prescription Request for {$this->prescription->patient->first_name} from {$this->prescription->doctor->first_name}",
+            'pharmacistMessage' => "Prescription Request for {$this->prescription->patient->first_name} from {$this->prescription->doctor->first_name} and requested medications are {$this->prescription->medications}",
         ];
     }
 }

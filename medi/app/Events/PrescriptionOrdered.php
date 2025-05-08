@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Payment;
 use App\Models\PendingPrescription;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -17,12 +18,13 @@ class PrescriptionOrdered implements ShouldBroadcast
      * Create a new event instance.
      */
     public $pendingPrescription;
+
     public $payment;
 
-    public function __construct(PendingPrescription $pendingPrescription)
+    public function __construct(PendingPrescription $pendingPrescription, Payment $payment)
     {
         $this->pendingPrescription = $pendingPrescription;
-
+        $this->payment = $payment;
     }
 
     /**
@@ -33,13 +35,13 @@ class PrescriptionOrdered implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('Pharmacist.'.$this->pendingPrescription->pharmacist->id),
+            new PrivateChannel('Pharmacist.'.$this->pendingPrescription->patient->id),
         ];
     }
 
     public function broadcastAs()
     {
-        return 'new.prescription';
+        return 'prescription.payment.request';
     }
 
     public function broadcastWith()
@@ -53,7 +55,7 @@ class PrescriptionOrdered implements ShouldBroadcast
             'instructions' => $this->pendingPrescription->instructions,
             'hospital_id' => $this->pendingPrescription->test->hospital_id,
 
-            'checkout_url' => $this->payment->checkout_url
+            'checkout_url' => $this->payment->checkout_url,
         ];
     }
 }

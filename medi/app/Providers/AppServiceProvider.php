@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Events\AppointmentConfirmed;
+use App\Events\PrescriptionRequestConfirmed;
 use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
 use App\Events\TestResultReady;
+use App\Listeners\ConfirmedPrescriptionRequest;
 use App\Listeners\SendAppointmentConfirmedNotification;
 use App\Listeners\SendTestPaymentNotification;
 use App\Listeners\SendTestResultNotification;
@@ -44,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             TestResultReady::class,
             SendTestResultNotification::class
+        );
+
+        Event::listen(
+            PrescriptionRequestConfirmed::class,
+            ConfirmedPrescriptionRequest::class,
         );
     }
 }
