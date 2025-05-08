@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Patient;
 use App\Models\User;
+use App\Models\Patient;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -72,9 +73,7 @@ class PatientController extends Controller
 
         return response()->json([
             'message' => $singlePatient,
-            '',
         ]);
-
     }
 
     /**
@@ -101,7 +100,7 @@ class PatientController extends Controller
         $patient->update($validated);
 
         // Find the corresponding user
-        $userToBeUpdated = User::where('associate_id', $id)->where('role', 'Patient')->first();
+        $userToBeUpdated = User::where('associated_id', $id)->where('role', 'Patient')->first();
 
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
@@ -146,6 +145,24 @@ class PatientController extends Controller
             'record deleted for patient' => $patientToDelete,
             'record deleted for user' => $UserToDelete,
         ]);
+    }
 
+    public function fetchNotificationsFromDB(Patient $patient)
+    {
+
+        // dd($doctor);
+
+        $notifications = Notification::where('notifiable_id', $patient->id)
+            ->where('notifiable_type', 'App\Models\Patient')
+            ->whereNull('read_at')
+            ->get();
+
+        // Map notifications to extract the 'message' from each 'data' array
+        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+
+        return response()->json([
+            'message' => 'Notifications you haven’t read',
+            'notifications' => $notificationMessages,
+        ]);
     }
 }
