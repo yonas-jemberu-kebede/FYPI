@@ -10,8 +10,12 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
+use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\TestController;
 use App\Mail\TestPaymentRequestEmail;
+use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']); // Register using email
@@ -19,6 +23,12 @@ Route::post('/login', [AuthController::class, 'login']); // Login using email
 Route::get('/alluser', [AuthController::class, 'allUser']); // Login using email
 Route::get('/hospitalsforappointment', [AppointmentController::class, 'allHospitals']);
 Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, 'getDoctorsInHospital']);
+
+Route::get('/doctorNotification/{doctor}', [DoctorController::class, 'fetchNotificationsFromDB']);
+
+Route::get('/hospitalNotification/{hospital}', [HospitalController::class, 'fetchNotificationsFromDB']);
+Route::get('/patientNotification/{patient}', [PatientController::class, 'fetchNotificationsFromDB']);
+
 // Route::middleware('auth:sanctum')->group(function () {
 //     Route::post('/logout', [AuthController::class, 'logout']);
 //     Route::middleware(['role:Patient'])->group(function () {
@@ -56,13 +66,23 @@ Route::get('/appointments/withDoctors', [AppointmentController::class, 'listDoct
 
 Route::post('/appointments/pay', [PaymentController::class, 'initiatePayment']);
 
-Route::post('/webhook/chapa', [PaymentController::class, 'handleChapaWebhook'])->name('payment.return');
+Route::get('/webhook/chapa/{tx_ref}', [PaymentController::class, 'handleChapaWebhook'])->name('payment.return');
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/testroute',function(){
-    $name="FUnny code";
-    Mail::to('jemeberuyonas01@gmail.com')->send(new TestPaymentRequestEmail($name));
+Route::get('/testEmail', function () {
+
+    Mail::to('jemeberuyonas01@gmail.com')->send(
+        new TestPaymentRequestEmail
+    );
+
+    return 'done';
 });
+
+Route::post('/prescription/request', [PrescriptionController::class, 'makeRequest']);
+Route::post('/test/request', [testController::class, 'makeRequest']);
+
+Route::get('/prescription/paymentWebhookHandling/{txRef}', [PrescriptionController::class, 'webhookHandlingForPrescription'])->name('prescription.return');
+Route::get('/test/paymentWebhookHandling/{txRef}', [TestController::class, 'webhookHandlingForTesting'])->name('test.return');
