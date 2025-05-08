@@ -3,17 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Events\PrescriptionOrdered;
+use App\Events\PrescriptionPaymentRequested;
 use App\Events\PrescriptionRequestConfirmed;
 use App\Models\Hospital;
 use App\Models\MedicationInventory;
 use App\Models\Patient;
+use App\Models\Doctor;
 use App\Models\Payment;
 use App\Models\PendingPrescription;
 use App\Models\Pharmacist;
 use App\Models\Prescription;
+
+use App\Mail\PrescriptionPaymentMail;
+
 use carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class PrescriptionController extends Controller
 {
@@ -36,7 +42,9 @@ class PrescriptionController extends Controller
         ]);
 
         $medications = $validated['medications'];
+
         $totalAmount = 0;
+
         $validMedications = [];
 
         // Calculate total cost and validate medication stock
@@ -64,6 +72,9 @@ class PrescriptionController extends Controller
         $currentDay = strtolower($now->dayName);
         $currentTime = $now->toTimeString();
 
+
+        dump($currentTime);
+        dump($currentDay);
         // Find available pharmacist
         $pharmacist = Pharmacist::where('shift_day', $currentDay)
             ->where('shift_start', '<=', $currentTime)
@@ -93,12 +104,12 @@ class PrescriptionController extends Controller
         }
 
         // Initialize payment
-        $txRef = 'PRESCRIPTION-'.$pendingPrescription->id.'-'.time();
+        $txRef = 'PRESCRIPTION-' . $pendingPrescription->id . '-' . time();
         $hospital = Hospital::findOrFail($validated['hospital_id']);
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$hospital->account,
+            'Authorization' => 'Bearer ' . $hospital->account,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -125,8 +136,33 @@ class PrescriptionController extends Controller
             'checkout_url' => $responseData['data']['checkout_url'],
         ]);
 
+
+        $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
+        $patientName = $patient->first_name;
+
+        $checkout_url = $chapaResponse['data']['checkout_url'];
+
+        $doctor = Doctor::where('id', $validated['doctor_id'])->firstOrFail();
+        $doctorName = $doctor->first_name;
+
+        $hospitalName = $hospital->name;
+
+        Mail::to($patient->email)->send(new PrescriptionPaymentMail(
+            $patientName,
+            $doctorName,
+            $hospitalName,
+            $totalAmount,
+            $checkout_url,
+
+
+
+
+        ));
+
         // Trigger event
         event(new PrescriptionOrdered($pendingPrescription, $payment));
+
+
 
         return response()->json(['checkout_url' => $responseData['data']['checkout_url']], 200);
     }
