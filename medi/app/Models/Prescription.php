@@ -42,9 +42,9 @@ class Prescription extends Model
         return $this->morphOne(Payment::class, 'payable');
     }
 
-    public function test()
+    public function medications()
     {
-        return $this->belongsTo(Test::class);
+        return $this->hasMany(MedicationInventory::class);
     }
 
     public function hospital()

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PendingBooking extends Model
 {
-    protected $fillable = ['tx_ref', 'data', 'payment_id', 'hospital_id'];
+    protected $guarded = [];
 
     protected $casts = ['data' => 'array'];
 
