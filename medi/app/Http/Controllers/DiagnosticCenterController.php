@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\DiagnosticCenter;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class DiagnosticCenterController extends Controller
 {
@@ -24,15 +26,17 @@ class DiagnosticCenterController extends Controller
      */
     public function store(Request $request)
     {
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|unique:diagnostic_centers,email,',
+            'email' => 'required|email|unique:users,email|unique:pharmacies,email,',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
             'hospital_id' => 'required|exists:hospitals,id', // Needed for User creation
+            'password' => 'required|confirmed', // Needed for User creation
         ]);
 
-        $diagnosticCenter = DiagnosticCenter::create(
+    $diagnsotcCenter = DiagnosticCenter::create(
             [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -41,12 +45,23 @@ class DiagnosticCenterController extends Controller
                 'hospital_id' => $validated['hospital_id'],
             ]
         );
+        $user = User::create(
+            [
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'Diagnostic Admin',
+                'associated_id' =>$diagnsotcCenter->hospital_id, // Link to the patient
+            ]
+        );
 
         return response()->json([
-            'message' => 'DiagnosticCenter and user created successfully',
-            'DiagnosticCenter' => $diagnosticCenter,
+            'message' => 'Diagnosic and  user created successfully',
+            'Pharmacy' =>$diagnsotcCenter,
+            'user' => $user,
 
         ]);
+        //
+
     }
 
     /**

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
             $table->foreignId('doctor_id')->constrained('doctors')->cascadeOnDelete();
             $table->foreignId('hospital_id')->constrained('hospitals')->cascadeOnDelete();
-            $table->foreignId('lab_technician_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('diagnostic_center_id')->nullable()->constrained()->cascadeOnDelete();
 
             $table->decimal('total_amount', 8, 2);
             $table->string('status')->default('pending');

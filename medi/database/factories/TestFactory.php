@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\DiagnosticCenter;
 use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\LabTechnician;
@@ -35,7 +36,7 @@ class TestFactory extends Factory
             'patient_id' => Patient::factory(),
             'doctor_id' => Doctor::factory(),
             'hospital_id' => Hospital::factory(),
-            'lab_technician_id' => $this->faker->optional(0.3)->randomElement([null, LabTechnician::factory()]), // 30% chance of null
+            'diagnostic_center_id' => DiagnosticCenter::Factory(), // 30% chance of null
             'total_amount' => $this->faker->randomFloat(2, 50, 1000), // e.g., 150.00
             'status' => $this->faker->randomElement(['pending', 'in_progress', 'completed', 'cancelled']),
             'test_requests' => json_encode([

@@ -2,38 +2,49 @@
 
 namespace App\Listeners;
 
-use App\Events\PrescriptionRequestConfirmed;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use App\Events\PrescriptionOrdered;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Log;
-
-class ConfirmedPrescriptionRequest
+class OrderedPrescriptionListener
 {
     /**
      * Create the event listener.
      */
-    public function __construct() {}
+    public function __construct()
+    {
+        //
+    }
 
     /**
      * Handle the event.
      */
-    public function handle(PrescriptionRequestConfirmed $event): void
+    public function handle(PrescriptionOrdered $event): void
     {
-        $notification = [
-            'type' => 'new.prescritption',
-            'notifiable_type' => 'App\Models\Pharmacy',
-            'notifiable_id' => $event->prescription->pharmacy_id,
-            'data' => [
-                'message' => "New prescription for {$event->prescription->patient->first_name} {$event->prescription->patient->last_name} from {$event->prescription->doctor->first_name}
-                   on {$event->prescription->created_at}",
 
-            ],
-            'read_at' => null,
+
+
+
+
+        $notification = [
+            'type' => 'prescription.payment.requested',
+            'notifiable_type' => 'App\Models\Patient',
+            'notifiable_id' => $event->pendingPrescription->patient_id,
+            'data' => [
+                'message' => 'New Test payment  Requested!',
+                'prescription_id' => $event->pendingPrescription->id,
+                'checkout_url' => $event->payment->checkout_url,
+            ]
+
         ];
 
         $exists = Notification::where([
+
             'type' => $notification['type'],
             'notifiable_type' => $notification['notifiable_type'],
             'notifiable_id' => $notification['notifiable_id'],
+
         ])->exists();
 
         if (! $exists) {

@@ -30,7 +30,7 @@ class PrescriptionRequestConfirmed
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('pharmacist'.$this->prescription->pharmacist->id),
+            new PrivateChannel('pharmacist'.$this->prescription->pharmacy->id),
         ];
     }
 

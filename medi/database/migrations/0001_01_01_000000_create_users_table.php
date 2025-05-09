@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             // Role of the user
-            $table->enum('role', ['Super Admin', 'Hospital Admin', 'Doctor', 'Pharmacist', 'Lab Technician', 'Patient']);
+            $table->enum('role', ['Super Admin', 'Hospital Admin', 'Doctor', 'Pharmacist', 'Lab Technician', 'Patient', 'Pharmacy Admin', 'Diagnostic Admin']);
             // Links to the specific entity record (e.g., patients.id, doctors.id, etc.)
             $table->unsignedBigInteger('associated_id')->nullable();
             // Gender of the user (if applicable)

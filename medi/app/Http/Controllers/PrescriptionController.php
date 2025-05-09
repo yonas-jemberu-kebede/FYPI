@@ -3,19 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Events\PrescriptionOrdered;
-use App\Events\PrescriptionPaymentRequested;
 use App\Events\PrescriptionRequestConfirmed;
+use App\Mail\PrescriptionPaymentMail;
+use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\MedicationInventory;
 use App\Models\Patient;
-use App\Models\Doctor;
 use App\Models\Payment;
 use App\Models\PendingPrescription;
 use App\Models\Pharmacist;
 use App\Models\Prescription;
-
-use App\Mail\PrescriptionPaymentMail;
-
 use carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -68,31 +65,38 @@ class PrescriptionController extends Controller
         }
 
         // Get current time and day
-        $now = Carbon::now();
-        $currentDay = strtolower($now->dayName);
-        $currentTime = $now->toTimeString();
+        // $now = Carbon::now();
+        // $currentDay = strtolower($now->dayName);
+        // $currentTime = $now->toTimeString();
+
+        // dump($currentTime);
+        // dump($currentDay);
+        // // Find available pharmacist
+        // $pharmacist = Pharmacist::where('shift_day', $currentDay)
+        //     ->where('shift_start', '<=', $currentTime)
+        //     ->where('shift_end', '>=', $currentTime)
+        //     ->first();
+
+        // if (! $pharmacist) {
+        //     return response()->json(['error' => 'No pharmacist available at this time'], 400);
+        // }
 
 
-        dump($currentTime);
-        dump($currentDay);
-        // Find available pharmacist
-        $pharmacist = Pharmacist::where('shift_day', $currentDay)
-            ->where('shift_start', '<=', $currentTime)
-            ->where('shift_end', '>=', $currentTime)
-            ->first();
+        $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
+        dump($hospital);
 
-        if (! $pharmacist) {
-            return response()->json(['error' => 'No pharmacist available at this time'], 400);
-        }
+        $pharmacyId = $hospital->pharmacy->id;
+
+
+        dump($pharmacyId);
 
         // Create pending prescription
         $pendingPrescription = PendingPrescription::create([
             'patient_id' => $validated['patient_id'],
             'doctor_id' => $validated['doctor_id'],
             'hospital_id' => $validated['hospital_id'],
-            'pharmacy_id' => $validated['pharmacy_id'],
             'test_id' => $validated['test_id'],
-            'pharmacist_id' => $pharmacist->id,
+            'pharmacy_id' => $pharmacyId,
             'medications' => $validMedications,
             'instructions' => $validated['instructions'],
             'status' => $validated['status'] ?? 'pending',
@@ -105,7 +109,7 @@ class PrescriptionController extends Controller
 
         // Initialize payment
         $txRef = 'PRESCRIPTION-' . $pendingPrescription->id . '-' . time();
-        $hospital = Hospital::findOrFail($validated['hospital_id']);
+
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
 
         $chapaResponse = Http::withHeaders([
@@ -136,8 +140,6 @@ class PrescriptionController extends Controller
             'checkout_url' => $responseData['data']['checkout_url'],
         ]);
 
-
-        $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
         $patientName = $patient->first_name;
 
         $checkout_url = $chapaResponse['data']['checkout_url'];
@@ -154,15 +156,10 @@ class PrescriptionController extends Controller
             $totalAmount,
             $checkout_url,
 
-
-
-
         ));
 
         // Trigger event
         event(new PrescriptionOrdered($pendingPrescription, $payment));
-
-
 
         return response()->json(['checkout_url' => $responseData['data']['checkout_url']], 200);
     }
@@ -179,7 +176,6 @@ class PrescriptionController extends Controller
             'patient_id' => $pendingPrescription->patient_id,
             'doctor_id' => $pendingPrescription->doctor_id,
             'hospital_id' => $pendingPrescription->hospital_id,
-            'pharmacist_id' => $pendingPrescription->pharmacist_id,
             'pharmacy_id' => $pendingPrescription->pharmacy_id,
             'test_id' => $pendingPrescription->test_id,
 

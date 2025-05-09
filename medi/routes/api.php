@@ -12,10 +12,8 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
-use App\Mail\TestPaymentRequestEmail;
 use App\Models\Patient;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']); // Register using email
@@ -72,17 +70,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/testEmail', function () {
-
-    Mail::to('jemeberuyonas01@gmail.com')->send(
-        new TestPaymentRequestEmail
-    );
-
-    return 'done';
-});
-
 Route::post('/prescription/request', [PrescriptionController::class, 'makeRequest']);
-Route::post('/test/request', [testController::class, 'makeRequest']);
+
+Route::post('/test/request', [TestController::class, 'makeRequest']);
 
 Route::get('/prescription/paymentWebhookHandling/{txRef}', [PrescriptionController::class, 'webhookHandlingForPrescription'])->name('prescription.return');
 Route::get('/test/paymentWebhookHandling/{txRef}', [TestController::class, 'webhookHandlingForTesting'])->name('test.return');

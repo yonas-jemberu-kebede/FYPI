@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pharmacy;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class PharmacyController extends Controller
 {
@@ -30,6 +32,7 @@ class PharmacyController extends Controller
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
             'hospital_id' => 'required|exists:hospitals,id', // Needed for User creation
+            'password' => 'required|confirmed', // Needed for User creation
         ]);
 
         $pharmacy = Pharmacy::create(
@@ -41,10 +44,19 @@ class PharmacyController extends Controller
                 'hospital_id' => $validated['hospital_id'],
             ]
         );
+        $user = User::create(
+            [
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'Pharmacy Admin',
+                'associated_id' => $pharmacy->hospital_id, // Link to the patient
+            ]
+        );
 
         return response()->json([
             'message' => 'Pharmacy and user created successfully',
             'Pharmacy' => $pharmacy,
+            'user' => $user,
 
         ]);
     }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('test_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('hospital_id')->constrained('hospitals')->cascadeOnDelete();
             $table->foreignId('pharmacy_id')->constrained('pharmacies')->onDelete('cascade');
-            $table->foreignId('pharmacist_id')->nullable()->constrained()->onDelete('cascade');
+
 
             $table->string('tx_ref')->nullable();
 

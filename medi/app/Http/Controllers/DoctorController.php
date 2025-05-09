@@ -48,7 +48,7 @@ class DoctorController extends Controller
             'phone_number' => 'required|string|max:20',
             'hospital_id' => 'required|exists:hospitals,id',
 
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'required|image|mimes:jpg,jpeg,png',
 
             'password' => 'required|string|min:6', // Needed for User creation
         ]);

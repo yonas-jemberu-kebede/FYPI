@@ -96,7 +96,7 @@ class HospitalController extends Controller
         return response()->json([
             'message' => 'Hospital and user created successfully',
             'Hospital' => $hospital,
-
+            'user' => $user,
         ]);
     }
 

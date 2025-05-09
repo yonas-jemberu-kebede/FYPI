@@ -2,8 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\Payment;
-use App\Models\PendingTesting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -17,17 +15,23 @@ class TestPaymentRequestEmail extends Mailable
     /**
      * Create a new message instance.
      */
-    public $pendingTesting;
+    public $patientName;
 
-    public $payment;
+    public $doctorName;
 
-    public function __construct()
+    public $hospitalName;
+
+    public $totalAmount;
+
+    public $checkout_url;
+
+    public function __construct(string $patientName, string $doctorName, string $hospitalName, string $totalAmount, string $checkout_url)
     {
-
-        // PendingTesting $pendingTesting, Payment $payment
-
-        // $this->pendingTesting = $pendingTesting;
-        // $this->payment = $payment;
+        $this->patientName = $patientName;
+        $this->hospitalName = $hospitalName;
+        $this->doctorName = $doctorName;
+        $this->totalAmount = $totalAmount;
+        $this->checkout_url = $checkout_url;
     }
 
     /**
@@ -46,13 +50,14 @@ class TestPaymentRequestEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mail.test',
-            // with: [
-            //     'patientName' => $this->pendingTesting->patient->firstName,
-            //     'testDetails' => $this->pendingTesting->test_requests,
-            //     'totalAmount' => $this->pendingTesting->total_amount,
-            //     'paymentLink' => $this->payment->checkout_url,
-            // ]
+            view: 'mail.test_payment_request',
+            with: [
+                'patient_name' => $this->patientName,
+                'doctor_name' => $this->doctorName,
+                'hospital_name' => $this->hospitalName,
+                'total_amount' => $this->totalAmount,
+                'checkout_url' => $this->checkout_url,
+            ]
         );
     }
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
 use App\Events\TestResultReady;
+use App\Mail\TestPaymentRequestEmail;
+use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\LabTechnician;
 use App\Models\patient;
@@ -15,6 +17,7 @@ use App\Models\TestPrice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class TestController extends Controller
 {
@@ -28,33 +31,42 @@ class TestController extends Controller
 
             'test_ids' => 'required|array|exists:test_prices,id',
         ]);
+
+        dump($validated);
         $testIds = $validated['test_ids'];
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
 
-        $now = Carbon::now();
+        // $now = Carbon::now();
 
-        $currentDay = strtolower($now->dayName);
-        $currentTime = $now->toTimeString();
+        // $currentDay = strtolower($now->dayName);
+        // $currentTime = $now->toTimeString();
+        // // dump($currentDay);
+        // // dump($currentTime);
+        // $labTechnician = LabTechnician::where('shift_day', $currentDay)
+        //     ->where('shift_start', '<=', $currentTime)
+        //     ->where('shift_end', '>=', $currentTime)
+        //     ->firstOrFail();
 
-        $labTechnician = LabTechnician::where('shift_day', $currentDay)
-            ->where('shift_start', '<=', $currentTime)
-            ->where('shift_end', '>=', $currentTime)
-            ->firstOrFail();
+        // dump($labTechnician);
+        // $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
-        $labTechnicianId = $labTechnician ? $labTechnician->id : null;
+
+        $hospital=Hospital::where('id',$validated['hospital_id'])->firstOrFail();
+        $diagnosticCenterId=$hospital->diagnosticCenter->id;
+
 
         $pendingTesting = PendingTesting::create([
             'patient_id' => $validated['patient_id'],
             'doctor_id' => $validated['doctor_id'],
             'hospital_id' => $validated['hospital_id'],
-            'lab_technician_id' => $labTechnicianId,
+            'diagnostic_center_id' => $diagnosticCenterId,
             'test_requests' => $testIds,
             'total_amount' => $totalAmount,
         ]);
 
         $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
 
-        $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
+       
         $chapaSecretKey = $hospital->account;
 
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
@@ -91,6 +103,26 @@ class TestController extends Controller
 
         ]);
 
+
+        $patientName = $patient->first_name;
+
+        $checkout_url = $chapaResponse['data']['checkout_url'];
+
+        $doctor = Doctor::where('id', $validated['doctor_id'])->firstOrFail();
+        $doctorName = $doctor->first_name;
+
+        $hospitalName = $hospital->name;
+
+        Mail::to($patient->email)->send(new TestPaymentRequestEmail(
+
+            $patientName,
+            $doctorName,
+            $hospitalName,
+            $totalAmount,
+            $checkout_url,
+
+        ));
+
         event(new TestPaymentRequested($pendingTesting, $payment));
 
         return response()->json([
@@ -105,8 +137,6 @@ class TestController extends Controller
         $payment = Payment::where('tx_ref', $txRef)->firstOrFail();
         $payment->update(['status' => 'success']);
         $pendingTesting = PendingTesting::where('tx_ref', $txRef)->firstOrFail();
-
-        dump($pendingTesting);
 
         $test = Test::create([
             'patient_id' => $pendingTesting->patient_id,
