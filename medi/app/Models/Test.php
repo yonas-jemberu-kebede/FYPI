@@ -29,9 +29,9 @@ class Test extends Model
         return $this->belongsTo(Doctor::class);
     }
 
-    public function labTechnician()
+    public function diagnosticCenter()
     {
-        return $this->belongsTo(LabTechnician::class);
+        return $this->belongsTo(DiagnosticCenter::class);
     }
 
     public function payment()

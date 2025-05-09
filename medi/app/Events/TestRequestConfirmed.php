@@ -32,7 +32,7 @@ class TestRequestConfirmed implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('labTechnician'.$this->test->labTechnician->id),
+            new PrivateChannel('diagnosticCenter'.$this->test->diagnosticCenter->id),
         ];
     }
 

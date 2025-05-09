@@ -25,8 +25,8 @@ class SendTestToConductNotification
 
         $notification = [
             'type' => 'appointment.confirmed',
-            'notifiable_type' => 'App\Models\LabTechnician',
-            'notifiable_id' => $test->labTechnician->id,
+            'notifiable_type' => 'App\Models\DiagnosticCenter',
+            'notifiable_id' => $test->diagnosticCenter->id,
             'data' => [
                 'message' => 'New Test Requested!',
                 'test_id' => $test->id,

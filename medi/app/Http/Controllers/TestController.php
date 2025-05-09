@@ -66,7 +66,7 @@ class TestController extends Controller
 
         $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
 
-       
+
         $chapaSecretKey = $hospital->account;
 
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
@@ -142,9 +142,9 @@ class TestController extends Controller
             'patient_id' => $pendingTesting->patient_id,
             'doctor_id' => $pendingTesting->doctor_id,
             'hospital_id' => $pendingTesting->hospital_id,
-            'lab_technician_id' => $pendingTesting->lab_technician_id,
+            'diagnostic_center_id' => $pendingTesting->diagnostic_center_id,
             'total_amount' => $pendingTesting->total_amount,
-            'status' => $pendingTesting->lab_technician_id ? 'assigned' : 'requested',
+            'status' => $pendingTesting->diagnostic_center_id ? 'assigned' : 'requested',
             'test_requests' => $pendingTesting->test_requests,
             'test_date' => now()->addDay(),
         ]);
