@@ -37,6 +37,8 @@ class PatientController extends Controller
             'password' => 'required|string|min:6', // Needed for User creation
         ]);
 
+        dump($validated);
+
         $patient = Patient::create(
             [
                 'first_name' => $validated['first_name'],
@@ -47,6 +49,8 @@ class PatientController extends Controller
                 'phone_number' => $validated['phone_number'],
             ]
         );
+
+        dump($patient);
 
         $user = User::create(
             [

@@ -70,7 +70,7 @@ class PaymentController extends Controller
 
         // Initiate payment with Chapa
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$secret,
+            'Authorization' => 'Bearer ' . $secret,
             'Content-Type' => 'application/json',
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $amount,
@@ -130,20 +130,20 @@ class PaymentController extends Controller
         $pendingData = $pendingBooking->data;
 
         // Create or update the patient record
-        $patient = Patient::firstOrCreate(
-            ['email' => $pendingData['patient']['email']],
-            [
-                'first_name' => $pendingData['patient']['first_name'],
-                'last_name' => $pendingData['patient']['last_name'],
-                'phone_number' => $pendingData['patient']['phone_number'],
-                'date_of_birth' => $pendingData['patient']['date_of_birth'],
-                'gender' => $pendingData['patient']['gender'],
-            ]
-        );
+        // $patient = Patient::firstOrCreate(
+        //     ['email' => $pendingData['patient']['email']],
+        //     [
+        //         'first_name' => $pendingData['patient']['first_name'],
+        //         'last_name' => $pendingData['patient']['last_name'],
+        //         'phone_number' => $pendingData['patient']['phone_number'],
+        //         'date_of_birth' => $pendingData['patient']['date_of_birth'],
+        //         'gender' => $pendingData['patient']['gender'],
+        //     ]
+        // );
 
         // Create the appointment
         $appointment = Appointment::create([
-            'patient_id' => $patient->id,
+            'patient_id' => $pendingData['appointment']['patient_id'],
             'doctor_id' => $pendingData['appointment']['doctor_id'],
             'hospital_id' => $pendingData['appointment']['hospital_id'],
             'appointment_date' => $pendingData['appointment']['appointment_date'],
@@ -153,18 +153,18 @@ class PaymentController extends Controller
         ]);
 
         // Create the user
-        $user = User::create([
-            'email' => $pendingData['user']['email'],
-            'password' => $pendingData['user']['password'],
-            'role' => $pendingData['user']['role'],
-            'associated_id' => $patient->id,
-        ]);
+        // $user = User::create([
+        //     'email' => $pendingData['user']['email'],
+        //     'password' => $pendingData['user']['password'],
+        //     'role' => $pendingData['user']['role'],
+        //     'associated_id' => $patient->id,
+        // ]);
 
         // Update the payment record
         $payment->update([
             'payable_type' => Appointment::class,
             'payable_id' => $appointment->id,
-            'patient_id' => $patient->id,
+            'patient_id' => $appointment->patient_id,
         ]);
 
         // Delete the pending booking

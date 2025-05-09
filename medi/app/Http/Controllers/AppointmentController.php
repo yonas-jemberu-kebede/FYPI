@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Hospital;
+use App\Models\Patient;
+use App\Models\User;
 use App\Models\PendingBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
@@ -42,17 +45,41 @@ class AppointmentController extends Controller
 
     public function book(Request $request)
     {
-        // Step 1: Validate the request
+
+        
+
+
+        if (!Auth::user()) {
+
+            return response()->json([
+                'message' => "please sign up first!"
+            ]);
+        }
+
+
+
+
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-            'email' => 'required|email|unique:patients,email',
-            'gender' => 'required|in:Male,Female',
-            'phone_number' => 'required|string|max:20',
-            'password' => 'required|string|min:6',
+
+            //  'first_name' =>$patient->first_name,
+            //  'last_name' =>$patient->last_name,
+            //  'email' =>$patient->email,
+            //  'date_of_birth' =>$patient->date_of_birth,
+            //  'gender' =>$patient->gender,
+            //  'phone_number' =>$patient->phone_number,
+
+
+
+            // 'last_name' => 'required|string|max:255',
+            // 'date_of_birth' => 'required|date',
+            // 'email' => 'required|email|unique:patientss,email',
+            // 'gender' => 'required|in:Male,Female',
+            // 'phone_number' => 'required|string|max:20',
+            // 'password' => 'required|string|min:6',
+
             'hospital_id' => 'required|exists:hospitals,id',
             'doctor_id' => 'required|exists:doctors,id',
+
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required',
         ]);
@@ -67,26 +94,40 @@ class AppointmentController extends Controller
         }
 
         // Step 3: Generate unique transaction reference
-        $txRef = 'APPT-'.uniqid();
+
+
+        $associateId = User::where('role', 'Patient')
+            ->where('id', Auth::user()->id)
+            ->firstOrFail();
+
+        $patient = Patient::where('id', $associateId->associated_id)->firstOrFail();
+
+
+        $txRef = 'APPT-' . uniqid();
+
+
 
         // Step 4: Organize temporary data
         $pendingData = [
-            'patient' => [
-                'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
-                'date_of_birth' => $validated['date_of_birth'],
-                'email' => $validated['email'],
-                'gender' => $validated['gender'],
-                'phone_number' => $validated['phone_number'],
-            ],
-            'user' => [
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => 'Patient',
-            ],
+            // 'patients' => [
+            //     'first_name' => $validated['first_name'],
+            //     'last_name' => $validated['last_name'],
+            //     'date_of_birth' => $validated['date_of_birth'],
+            //     'email' => $validated['email'],
+            //     'gender' => $validated['gender'],
+            //     'phone_number' => $validated['phone_number'],
+            // ],
+            // 'user' => [
+            //     'email' => $validated['email'],
+            //     'password' => Hash::make($validated['password']),
+            //     'role' => 'Patients',
+            // ],
             'appointment' => [
                 'hospital_id' => $validated['hospital_id'],
                 'doctor_id' => $validated['doctor_id'],
+
+                'patient_id' => $patient->id,
+
                 'appointment_date' => $validated['appointment_date'],
                 'appointment_time' => $validated['appointment_time'],
                 'amount' => 100.00,
@@ -105,7 +146,7 @@ class AppointmentController extends Controller
         return response()->json([
             'tx_ref' => $txRef,
             'amount' => 100.00,
-            'email' => $validated['email'],
+            'email' => $patient->email,
             'message' => 'Proceed to payment',
         ], 200);
     }
@@ -116,9 +157,9 @@ class AppointmentController extends Controller
         /**
          * TO BE CHECKED AGAIN
          */
-        $appointments = Appointment::where('patient_id', $request->user()->patient->id ?? 0)
+        $appointments = Appointment::where('patient_id', $request->user()->patients->id ?? 0)
             ->orWhere('doctor_id', $request->user()->doctor->id ?? 0)
-            ->with(['patient', 'doctor', 'hospital'])
+            ->with(['patients', 'doctor', 'hospital'])
             ->get();
 
         return response()->json($appointments);
