@@ -2,11 +2,10 @@
 
 namespace App\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Events\PrescriptionOrdered;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Log;
+
 class OrderedPrescriptionListener
 {
     /**
@@ -23,10 +22,6 @@ class OrderedPrescriptionListener
     public function handle(PrescriptionOrdered $event): void
     {
 
-
-
-
-
         $notification = [
             'type' => 'prescription.payment.requested',
             'notifiable_type' => 'App\Models\Patient',
@@ -35,7 +30,7 @@ class OrderedPrescriptionListener
                 'message' => 'New Test payment  Requested!',
                 'prescription_id' => $event->pendingPrescription->id,
                 'checkout_url' => $event->payment->checkout_url,
-            ]
+            ],
 
         ];
 

@@ -36,7 +36,7 @@ class DiagnosticCenterController extends Controller
             'password' => 'required|confirmed', // Needed for User creation
         ]);
 
-    $diagnsotcCenter = DiagnosticCenter::create(
+        $diagnsotcCenter = DiagnosticCenter::create(
             [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -50,13 +50,13 @@ class DiagnosticCenterController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'Diagnostic Admin',
-                'associated_id' =>$diagnsotcCenter->hospital_id, // Link to the patient
+                'associated_id' => $diagnsotcCenter->hospital_id, // Link to the patient
             ]
         );
 
         return response()->json([
             'message' => 'Diagnosic and  user created successfully',
-            'Pharmacy' =>$diagnsotcCenter,
+            'Pharmacy' => $diagnsotcCenter,
             'user' => $user,
 
         ]);

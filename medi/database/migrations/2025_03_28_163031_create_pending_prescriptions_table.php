@@ -19,7 +19,6 @@ return new class extends Migration
             $table->foreignId('hospital_id')->constrained('hospitals')->cascadeOnDelete();
             $table->foreignId('pharmacy_id')->constrained('pharmacies')->onDelete('cascade');
 
-
             $table->string('tx_ref')->nullable();
 
             $table->string('status')->default('pending');

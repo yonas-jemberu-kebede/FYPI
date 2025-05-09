@@ -32,7 +32,7 @@ class TestController extends Controller
             'test_ids' => 'required|array|exists:test_prices,id',
         ]);
 
-        dump($validated);
+        // dump($validated);
         $testIds = $validated['test_ids'];
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
 
@@ -50,10 +50,8 @@ class TestController extends Controller
         // dump($labTechnician);
         // $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
-
-        $hospital=Hospital::where('id',$validated['hospital_id'])->firstOrFail();
-        $diagnosticCenterId=$hospital->diagnosticCenter->id;
-
+        $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
+        $diagnosticCenterId = $hospital->diagnosticCenter->id;
 
         $pendingTesting = PendingTesting::create([
             'patient_id' => $validated['patient_id'],
@@ -65,7 +63,6 @@ class TestController extends Controller
         ]);
 
         $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
-
 
         $chapaSecretKey = $hospital->account;
 
@@ -102,7 +99,6 @@ class TestController extends Controller
             'checkout_url' => $checkoutUrl,
 
         ]);
-
 
         $patientName = $patient->first_name;
 

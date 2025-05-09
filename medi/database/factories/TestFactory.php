@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\DiagnosticCenter;
 use App\Models\Doctor;
 use App\Models\Hospital;
-use App\Models\LabTechnician;
 use App\Models\Patient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
