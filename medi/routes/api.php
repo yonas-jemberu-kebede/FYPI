@@ -27,6 +27,7 @@ Route::get('/doctorNotification/{doctor}', [DoctorController::class, 'fetchNotif
 
 Route::get('/hospitalNotification/{hospital}', [HospitalController::class, 'fetchNotificationsFromDB']);
 Route::get('/patientNotification/{patient}', [PatientController::class, 'fetchNotificationsFromDB']);
+Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
