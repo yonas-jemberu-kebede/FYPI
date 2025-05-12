@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('image');
+            $table->integer('experience');
             $table->string('specialization')->default('General');
             $table->string('email')->unique();
             // Each doctor is linked to a hospital

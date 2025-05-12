@@ -42,6 +42,7 @@ class DoctorController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'date_of_birth' => 'required|date',
+            'experience' => 'required|integer',
             'specialization' => 'required|string',
             'email' => 'required|email|unique:users,email|unique:Doctors,email',
             'gender' => 'required|in:Male,Female',
@@ -61,6 +62,7 @@ class DoctorController extends Controller
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'date_of_birth' => $validated['date_of_birth'],
+                'experience' => $validated['experience'],
                 'email' => $validated['email'],
                 'specialization' => $validated['specialization'],
                 'gender' => $validated['gender'],
@@ -111,6 +113,7 @@ class DoctorController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
+            'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'email' => 'nullable|email|unique:users,email|unique:Doctors,email,'.$doctor,
             'gender' => 'nullable|in:Male,Female',
@@ -119,7 +122,7 @@ class DoctorController extends Controller
             'password' => 'nullable|string|min:6', // Password is optional on update
         ]);
 
-        dd($validated);
+        //dd($validated);
 
         $imagePath = $doctor->image; // Keep existing image by default
         if ($request->hasFile('image')) {
@@ -138,6 +141,7 @@ class DoctorController extends Controller
             'specialization' => $validated['specialization'] ?? $doctor->specialization,
             'email' => $validated['email'] ?? $doctor->email,
             'gender' => $validated['gender'] ?? $doctor->gender,
+            'exeprience' => $validated['experience'] ?? $doctor->exeprience,
             'phone_number' => $validated['phone_number'] ?? $doctor->phone_number,
             'hospital_id' => $validated['hospital_id'] ?? $doctor->hospital_id,
             'image' => $imagePath,
