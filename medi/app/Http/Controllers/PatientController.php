@@ -71,12 +71,12 @@ class PatientController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Patient $patient)
     {
-        $singlePatient = Patient::findOrFail($id)->first();
+
 
         return response()->json([
-            'message' => $singlePatient,
+            'message' => $patient,
         ]);
     }
 
@@ -94,7 +94,7 @@ class PatientController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'date_of_birth' => 'required|date',
-            'email' => 'required|email|unique:users,email|unique:patients,email,'.$patient->email,
+            'email' => 'required|email|unique:users,email|unique:patients,email,' . $patient->email,
             'gender' => 'required|in:Male,Female',
             'phone_number' => 'required|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
