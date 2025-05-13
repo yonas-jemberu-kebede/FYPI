@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Hospital;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\User;
@@ -27,6 +28,8 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
+
+        dump('hi');
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -83,34 +86,48 @@ class PatientController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Patient $patient)
     {
 
-        // Fetch the patient
-        $patient = Patient::findOrFail($id);
+
+
+                // Fetch the patient
+
+dump($patient);
 
         // Validate input while ignoring the current patient's email
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-            'email' => 'required|email|unique:users,email|unique:patients,email,' . $patient->email,
-            'gender' => 'required|in:Male,Female',
-            'phone_number' => 'required|string|max:20',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
+            'gender' => 'nullable|in:Male,Female',
+            'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
         ]);
 
+
+        // dump($validated);
         // Update the patient record
-        $patient->update($validated);
+        $patient->update([
+            'first_name' => $validated['first_name'] ?? $patient->first_name,
+            'last_name' => $validated['last_name'] ?? $patient->last_name,
+            'date_of_birth' => $validated['date_of_birth'] ?? $patient->date_of_birth,
+            'email' => $validated['email'] ?? $patient->email,
+            'gender' => $validated['gender'] ?? $patient->gender,
+            'phone_number' => $validated['phone_number'] ?? $patient->phone_number,
+        ]);
+
+        dump($patient);
 
         // Find the corresponding user
-        $userToBeUpdated = User::where('associated_id', $id)->where('role', 'Patient')->first();
+        $userToBeUpdated = User::where('associated_id',$patient->id)->where('role', 'Patient')->first();
 
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
             $updateData = [
-                'email' => $validated['email'],
-                'gender' => $validated['gender'],
+                'email' => $validated['email']  ?? $patient->email,
+                'password' => $validated['password'] ?? $patient->password,
             ];
 
             // Only update password if provided
