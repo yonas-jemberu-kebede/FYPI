@@ -46,7 +46,7 @@ class AppointmentController extends Controller
     public function book(Request $request)
     {
 
-        
+
 
 
         if (!Auth::user()) {
@@ -154,14 +154,47 @@ class AppointmentController extends Controller
     public function index(Request $request)
     {
 
-        /**
-         * TO BE CHECKED AGAIN
-         */
-        $appointments = Appointment::where('patient_id', $request->user()->patients->id ?? 0)
-            ->orWhere('doctor_id', $request->user()->doctor->id ?? 0)
-            ->with(['patients', 'doctor', 'hospital'])
-            ->get();
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => "not authenticated"
+            ]);
+        }
 
-        return response()->json($appointments);
+        if (Auth::user()->role == 'Doctor') {
+            $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
+            $appointments = Appointment::Where('doctor_id', $doctor->id)->get();
+            if ($appointments->isEmpty()) {
+
+                return response()->json([
+                    'message' => 'dear doctor ,you have no appointment today'
+                ]);
+            }
+            return response()->json($appointments);
+        } else if (Auth::user()->role == 'Patient') {
+            $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
+
+
+            $appointments = Appointment::Where('patient_id', $patient->id)->get();
+
+
+            if ($appointments->isEmpty()) {
+
+                return response()->json([
+                    'message' => 'dear patient ,you have no appointment today'
+                ]);
+            }
+            return response()->json($appointments);
+        }
+        if (Auth::user()->role == 'Hospital') {
+            $hospital = Hospital::where('id', Auth::user()->associated_id)->firstOrFail();
+            $appointments = Appointment::Where('hospital_id', $hospital->id)->get();
+            if ($appointments->isEmpty()) {
+
+                return response()->json([
+                    'message' => 'dear Hospital , no appointment today'
+                ]);
+            }
+            return response()->json($appointments);
+        }
     }
 }
