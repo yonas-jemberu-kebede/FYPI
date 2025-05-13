@@ -35,6 +35,7 @@ Route::get('/appointments', [AppointmentController::class, 'index'])->middleware
 
 
 Route::get('/upcomingAppointment', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
+Route::get('/cancelAppointment', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -36,6 +36,8 @@ class AppointmentController extends Controller
 
     public function listDoctorsWithThierHospital()
     {
+
+
         $doctors = Doctor::with('hospital')->get();
 
         return response()->json([
@@ -196,5 +198,23 @@ class AppointmentController extends Controller
             }
             return response()->json($appointments);
         }
+    }
+
+    public function cancelAppointment(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => "not authenticated"
+            ]);
+        }
+        $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
+        $appointment = Appointment::Where('patient_id', $patient->id)->firstOrFail();
+
+        $appointment->delete();
+
+        return response()->json([
+            'message' => "appointment cancelled successfully!",
+            'cancelled appointment is ' => $appointment
+        ]);
     }
 }
