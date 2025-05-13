@@ -36,6 +36,7 @@ Route::get('/upcomingAppointment', [DoctorController::class, 'upcomingAppointmen
 Route::get('/cancelAppointment', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
 
 Route::post('/prescriptionCompleted/{prescription}', [PrescriptionController::class, 'prescriptionCompleted']);
+Route::get('/specializedDoctors/{specialization}', [DoctorController::class, 'fetchingDoctorsBasedOnSpecialization']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -272,4 +272,16 @@ class DoctorController extends Controller
             'upcoming appointments' => $upcomingAppoointments,
         ]);
     }
+
+    public function fetchingDoctorsBasedOnSpecialization(string  $specialization){
+
+
+        $doctors=doctor::where('specialization','like',$specialization)->with('hospital')->get();
+
+        return response()->json([
+            'specialization type' => $specialization,
+            'specialized doctor' => $doctors
+        ]);
+
+    }
 }
