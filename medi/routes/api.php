@@ -12,6 +12,7 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
+use App\Models\Appointment;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,12 @@ Route::get('/doctorNotification/{doctor}', [DoctorController::class, 'fetchNotif
 Route::get('/hospitalNotification/{hospital}', [HospitalController::class, 'fetchNotificationsFromDB']);
 Route::get('/patientNotification/{patient}', [PatientController::class, 'fetchNotificationsFromDB']);
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
+Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
+
+Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('auth:sanctum');
+
+
+Route::get('/upcomingAppointment', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -6,9 +6,12 @@ use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DoctorController extends Controller
 {
@@ -26,10 +29,21 @@ class DoctorController extends Controller
 
     public function index()
     {
-        $allDoctors = Doctor::get();
+        $allDoctors = Doctor::with('hospital')->get()->map(function ($doctor) {
+            return [
+                'name' => $doctor->first_name,
+                'specialty' => $doctor->specialization,
+                'experience' => $doctor->experience,
+                'hospital' => [
+                    'name' => $doctor->hospital->name,
+                    'latitude' => $doctor->hospital->latitude,
+                    'longitude' => $doctor->hospital->longitude,
+                ],
+            ];
+        });
 
         return response()->json([
-            'all Doctors' => $allDoctors,
+            'allDoctors' => $allDoctors,
         ]);
     }
 
@@ -95,6 +109,8 @@ class DoctorController extends Controller
     {
         $singleDoctor = Doctor::findOrFail($id);
 
+
+
         return response()->json([
             'message' => $singleDoctor,
         ]);
@@ -115,7 +131,7 @@ class DoctorController extends Controller
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor,
+            'email' => 'nullable|email|unique:users,email|unique:doctors,email,' . $doctor,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -141,7 +157,7 @@ class DoctorController extends Controller
             'specialization' => $validated['specialization'] ?? $doctor->specialization,
             'email' => $validated['email'] ?? $doctor->email,
             'gender' => $validated['gender'] ?? $doctor->gender,
-            'exeprience' => $validated['experience'] ?? $doctor->exeprience,
+            'experience' => $validated['experience'] ?? $doctor->experience,
             'phone_number' => $validated['phone_number'] ?? $doctor->phone_number,
             'hospital_id' => $validated['hospital_id'] ?? $doctor->hospital_id,
             'image' => $imagePath,
@@ -217,6 +233,54 @@ class DoctorController extends Controller
             'message' => 'Notifications you haven’t read',
             'notifications' => $notificationMessages,
         ]);
+    }
 
+    public function upcomingAppointment()
+    {
+
+//checking the user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'message' => 'you are not eligible'
+            ]);
+        }
+
+        //if the user is authenticated,then catch its associated_id and find the doctor from doctors table
+
+        $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
+
+
+
+
+        $now = carbon::now();
+        $start = $now->toTimeString();
+
+        $day = $now->dayName;
+
+
+
+
+
+
+        $upcomingAppoointments = Appointment::where('doctor_id', $doctor->id)
+            ->where('appointment_date', $day)
+            ->where('appointment_time', '>', $start)
+            ->orderBy('appointment_time', 'asc')
+            ->paginate(10);
+
+
+            if($upcomingAppoointments->isEmpty()){
+
+                return response()->json(
+                    [
+                        'message' => 'no upcoming appoointment'
+                    ]
+                    );
+
+            }
+
+        return response()->json([
+            'upcoming appointments' => $upcomingAppoointments
+        ]);
     }
 }
