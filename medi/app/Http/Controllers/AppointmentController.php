@@ -6,11 +6,11 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\Patient;
-use App\Models\User;
 use App\Models\PendingBooking;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AppointmentController extends Controller
 {
@@ -29,6 +29,12 @@ class AppointmentController extends Controller
     {
         $doctors = Doctor::where('hospital_id', $hospital->id)->get();
 
+        if ($doctors->isEmpty()) {
+            return response()->json([
+                'message' => 'No doctors found for this hospital',
+            ], 404);
+        }
+
         return response()->json([
             'doctors' => $doctors,
         ]);
@@ -36,7 +42,6 @@ class AppointmentController extends Controller
 
     public function listDoctorsWithThierHospital()
     {
-
 
         $doctors = Doctor::with('hospital')->get();
 
@@ -48,18 +53,12 @@ class AppointmentController extends Controller
     public function book(Request $request)
     {
 
-
-
-
-        if (!Auth::user()) {
+        if (! Auth::user()) {
 
             return response()->json([
-                'message' => "please sign up first!"
+                'message' => 'please sign up first!',
             ]);
         }
-
-
-
 
         $validated = $request->validate([
 
@@ -69,8 +68,6 @@ class AppointmentController extends Controller
             //  'date_of_birth' =>$patient->date_of_birth,
             //  'gender' =>$patient->gender,
             //  'phone_number' =>$patient->phone_number,
-
-
 
             // 'last_name' => 'required|string|max:255',
             // 'date_of_birth' => 'required|date',
@@ -97,17 +94,13 @@ class AppointmentController extends Controller
 
         // Step 3: Generate unique transaction reference
 
-
         $associateId = User::where('role', 'Patient')
             ->where('id', Auth::user()->id)
             ->firstOrFail();
 
         $patient = Patient::where('id', $associateId->associated_id)->firstOrFail();
 
-
         $txRef = 'APPT-' . uniqid();
-
-
 
         // Step 4: Organize temporary data
         $pendingData = [
@@ -156,9 +149,9 @@ class AppointmentController extends Controller
     public function index(Request $request)
     {
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
-                'message' => "not authenticated"
+                'message' => 'not authenticated',
             ]);
         }
 
@@ -168,23 +161,23 @@ class AppointmentController extends Controller
             if ($appointments->isEmpty()) {
 
                 return response()->json([
-                    'message' => 'dear doctor ,you have no appointment today'
+                    'message' => 'dear doctor ,you have no appointment today',
                 ]);
             }
+
             return response()->json($appointments);
-        } else if (Auth::user()->role == 'Patient') {
+        } elseif (Auth::user()->role == 'Patient') {
             $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
-
             $appointments = Appointment::Where('patient_id', $patient->id)->get();
-
 
             if ($appointments->isEmpty()) {
 
                 return response()->json([
-                    'message' => 'dear patient ,you have no appointment today'
+                    'message' => 'dear patient ,you have no appointment today',
                 ]);
             }
+
             return response()->json($appointments);
         }
         if (Auth::user()->role == 'Hospital') {
@@ -193,18 +186,19 @@ class AppointmentController extends Controller
             if ($appointments->isEmpty()) {
 
                 return response()->json([
-                    'message' => 'dear Hospital , no appointment today'
+                    'message' => 'dear Hospital , no appointment today',
                 ]);
             }
+
             return response()->json($appointments);
         }
     }
 
     public function cancelAppointment(Request $request)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
-                'message' => "not authenticated"
+                'message' => 'not authenticated',
             ]);
         }
         $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
@@ -213,8 +207,8 @@ class AppointmentController extends Controller
         $appointment->delete();
 
         return response()->json([
-            'message' => "appointment cancelled successfully!",
-            'cancelled appointment is ' => $appointment
+            'message' => 'appointment cancelled successfully!',
+            'cancelled appointment is ' => $appointment,
         ]);
     }
 }

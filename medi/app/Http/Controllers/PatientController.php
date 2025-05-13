@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Hospital;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\User;
@@ -77,7 +76,6 @@ class PatientController extends Controller
     public function show(Patient $patient)
     {
 
-
         return response()->json([
             'message' => $patient,
         ]);
@@ -89,23 +87,20 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
 
+        // Fetch the patient
 
-
-                // Fetch the patient
-
-dump($patient);
+        dump($patient);
 
         // Validate input while ignoring the current patient's email
         $validated = $request->validate([
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
-            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
         ]);
-
 
         // dump($validated);
         // Update the patient record
@@ -121,12 +116,12 @@ dump($patient);
         dump($patient);
 
         // Find the corresponding user
-        $userToBeUpdated = User::where('associated_id',$patient->id)->where('role', 'Patient')->first();
+        $userToBeUpdated = User::where('associated_id', $patient->id)->where('role', 'Patient')->first();
 
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
             $updateData = [
-                'email' => $validated['email']  ?? $patient->email,
+                'email' => $validated['email'] ?? $patient->email,
                 'password' => $validated['password'] ?? $patient->password,
             ];
 

@@ -18,6 +18,9 @@ class PaymentController extends Controller
 {
     public function initiatePayment(Request $request)
     {
+
+        // what if  i call these method with the parameters??
+
         // Validate the incoming request
         $validated = $request->validate([
             'tx_ref' => 'required|string',
@@ -70,7 +73,7 @@ class PaymentController extends Controller
 
         // Initiate payment with Chapa
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $secret,
+            'Authorization' => 'Bearer '.$secret,
             'Content-Type' => 'application/json',
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $amount,

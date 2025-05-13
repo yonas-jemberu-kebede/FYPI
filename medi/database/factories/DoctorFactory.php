@@ -23,7 +23,7 @@ class DoctorFactory extends Factory
             'specialization' => $this->faker->randomElement(['Cardiology', 'Orthopedics', 'Pediatrics', 'General']),
             'email' => $this->faker->unique()->safeEmail,
             'hospital_id' => Hospital::factory(),
-            'experience'=> $this->faker->numberBetween(0,40),
+            'experience' => $this->faker->numberBetween(0, 40),
             'gender' => $this->faker->randomElement(['Male', 'Female']),
             'phone_number' => $this->faker->phoneNumber,
             'date_of_birth' => $this->faker->date(),
