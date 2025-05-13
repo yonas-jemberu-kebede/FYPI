@@ -12,14 +12,13 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
-use App\Models\Appointment;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']); // Register using email
 Route::post('/login', [AuthController::class, 'login'])->name('login'); // Login using email
-//Route::post('/logout', [AuthController::class, 'logout']); // Logout using email
+// Route::post('/logout', [AuthController::class, 'logout']); // Logout using email
 Route::get('/alluser', [AuthController::class, 'allUser']); // Login using email
 Route::get('/hospitalsforappointment', [AppointmentController::class, 'allHospitals']);
 Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, 'getDoctorsInHospital']);
@@ -33,9 +32,10 @@ Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
 Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('auth:sanctum');
 
-
 Route::get('/upcomingAppointment', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
 Route::get('/cancelAppointment', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
+
+Route::post('/prescriptionCompleted/{prescription}', [PrescriptionController::class, 'prescriptionCompleted']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -70,7 +70,7 @@ Route::resource('diagnosticcenters', DiagnosticCenterController::class);
 Route::resource('pharmacists', PharmacistController::class);
 Route::resource('labtechnicians', LabTechnicianController::class);
 
-//Route::post('/appointments/book', [AppointmentController::class, 'book']);
+// Route::post('/appointments/book', [AppointmentController::class, 'book']);
 Route::get('/appointments/withDoctors', [AppointmentController::class, 'listDoctorsWithThierHospital']);
 
 Route::post('/appointments/pay', [PaymentController::class, 'initiatePayment']);

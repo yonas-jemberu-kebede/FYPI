@@ -196,4 +196,17 @@ class PrescriptionController extends Controller
 
         return response()->json(['message' => 'Webhook processed'], 200);
     }
+
+    public function prescriptionCompleted(Prescription $prescription)
+    {
+
+        $prescription->update([
+            'status' => 'completed',
+        ]);
+
+        return response()->json([
+            'message' => "prescription status changed to 'completed' ",
+        ]);
+
+    }
 }
