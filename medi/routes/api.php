@@ -24,6 +24,7 @@ Route::get('/hospitalsforappointment', [AppointmentController::class, 'allHospit
 Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, 'getDoctorsInHospital']);
 
 Route::get('/doctorNotification/{doctor}', [DoctorController::class, 'fetchNotificationsFromDB']);
+Route::get('/allDoctors', [DoctorController::class, 'all']);
 
 Route::get('/hospitalNotification/{hospital}', [HospitalController::class, 'fetchNotificationsFromDB']);
 Route::get('/patientNotification/{patient}', [PatientController::class, 'fetchNotificationsFromDB']);
