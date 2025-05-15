@@ -22,7 +22,7 @@ class DoctorController extends Controller
 
     public function all()
     {
-        $doctors = Doctor::get();
+        $doctors = Doctor::with('hospital')->get();
 
         return response()->json(
             [
