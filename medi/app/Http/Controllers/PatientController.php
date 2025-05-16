@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Models\Patient;
+use App\Models\Appointment;
+
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Carbon\carbon;
 
 class PatientController extends Controller
 {
@@ -185,4 +188,54 @@ class PatientController extends Controller
             'notifications' => $notificationMessages,
         ]);
     }
+
+
+
+    public function upcomingAppointment()
+    {
+
+        // checking the user is authenticated
+        if (! Auth::check()) {
+            return response()->json([
+                'message' => 'you are not eligible',
+            ]);
+        }
+
+        // if the user is authenticated,then catch its associated_id and find the doctor from doctors table
+
+        $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
+
+        $now = carbon::now();
+        $start = $now->toTimeString();
+
+        $day = $now->dayName;
+
+        $upcomingAppoointments = Appointment::where('patient_id', $patient->id)
+            ->where('appointment_date', $day)
+            ->where('appointment_time', '>', $start)
+            ->orderBy('appointment_time', 'asc')
+            ->paginate(10);
+
+        if ($upcomingAppoointments->isEmpty()) {
+
+            return response()->json(
+                [
+                    'message' => 'no upcoming appointment for patient',
+                ]
+            );
+        }
+
+        return response()->json([
+            'upcoming appointments' => $upcomingAppoointments,
+        ]);
+    }
+
+
+
+
+
+
+
+
+
 }
