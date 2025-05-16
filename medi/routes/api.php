@@ -23,21 +23,22 @@ Route::get('/alluser', [AuthController::class, 'allUser']); // Login using email
 Route::get('/hospitalsforappointment', [AppointmentController::class, 'allHospitals']);
 Route::get('/doctorsforappointment/{hospital}', [AppointmentController::class, 'getDoctorsInHospital']);
 
-Route::get('/doctorNotification/{doctor}', [DoctorController::class, 'fetchNotificationsFromDB']);
+Route::get('/doctorNotification', [DoctorController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/allDoctors', [DoctorController::class, 'all']);
 
-Route::get('/hospitalNotification/{hospital}', [HospitalController::class, 'fetchNotificationsFromDB']);
-Route::get('/patientNotification/{patient}', [PatientController::class, 'fetchNotificationsFromDB']);
+Route::get('/hospitalNotification', [HospitalController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
+Route::get('/patientNotification', [PatientController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
 Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('auth:sanctum');
-
 Route::get('/upcomingAppointment', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
 Route::delete('/cancelAppointment', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
 
 Route::post('/prescriptionCompleted/{prescription}', [PrescriptionController::class, 'prescriptionCompleted']);
 Route::get('/specializedDoctors/{specialization}', [DoctorController::class, 'fetchingDoctorsBasedOnSpecialization']);
+
+Route::get('/nearby-hospitals/{latitude}/{longitude}/{radius}', [HospitalController::class, 'getNearbyHospitals']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

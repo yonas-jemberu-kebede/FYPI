@@ -6,9 +6,11 @@ use App\Mail\HospitalMail;
 use App\Models\Hospital;
 use App\Models\Notification;
 use App\Models\User;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\AUth;
 
 class HospitalController extends Controller
 {
@@ -175,10 +177,14 @@ class HospitalController extends Controller
         ]);
     }
 
-    public function fetchNotificationsFromDB(Hospital $hospital)
+    public function fetchNotificationsFromDB()
     {
 
-        // dd($doctor);
+        if (!Auth::check()) {
+            return 404;
+        }
+
+        $hospital = Hospital::where('id', Auth::user()->associated_id)->firstOrFail();
 
         $notifications = Notification::where('notifiable_id', $hospital->id)
             ->where('notifiable_type', 'App\Models\Hospital')
@@ -192,5 +198,36 @@ class HospitalController extends Controller
             'message' => 'Notifications you haven’t read',
             'notifications' => $notificationMessages,
         ]);
+    }
+
+    public function getNearbyHospitals($latitude, $longitude, $radius = 10)
+    {
+        // Validate patient's location
+        // $request->validate([
+        //     'latitude'  => 'required|numeric|between:-90,90',
+        //     'longitude' => 'required|numeric|between:-180,180',
+        //     'radius'   => 'sometimes|numeric|min:1' // Default: 10 km
+        // ]);
+
+        $lat = $latitude;
+        $lng = $longitude;
+
+        // Fetch hospitals within radius (sorted by distance)
+        $hospitals = Hospital::selectRaw(
+            'id, name, latitude, longitude,
+            (6371 * acos(cos(radians(?)) * cos(radians(latitude)) *
+            cos(radians(longitude) - radians(?)) +
+            sin(radians(?)) * sin(radians(latitude)))) AS distance',
+            [$lat, $lng, $lat]
+        )
+            ->having('distance', '<', $radius)
+            ->orderBy('distance')
+            ->paginate(5);
+
+        if (! $hospitals) {
+            return response()->json(['message' => 'no response around here']);
+        }
+
+        return response()->json($hospitals);
     }
 }

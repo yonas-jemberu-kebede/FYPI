@@ -7,6 +7,7 @@ use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class PatientController extends Controller
 {
@@ -28,7 +29,6 @@ class PatientController extends Controller
     public function store(Request $request)
     {
 
-        dump('hi');
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -38,8 +38,6 @@ class PatientController extends Controller
             'phone_number' => 'required|string|max:20',
             'password' => 'required|string|min:6', // Needed for User creation
         ]);
-
-        dump($validated);
 
         $patient = Patient::create(
             [
@@ -51,8 +49,6 @@ class PatientController extends Controller
                 'phone_number' => $validated['phone_number'],
             ]
         );
-
-        dump($patient);
 
         $user = User::create(
             [
@@ -163,8 +159,16 @@ class PatientController extends Controller
         ]);
     }
 
-    public function fetchNotificationsFromDB(Patient $patient)
+    public function fetchNotificationsFromDB()
     {
+
+
+        if(!Auth::check()){
+            return 404;
+        }
+
+        $patient=Patient::where('id',Auth::user()->associated_id)->firstOrFail();
+
 
         // dd($doctor);
 

@@ -18,19 +18,18 @@ class DoctorController extends Controller
     /**
      * Display a listing of the resource.
      */
-
-
     public function all()
     {
         $doctors = Doctor::with('hospital')->get();
 
         return response()->json(
             [
-                'message' => "all doctors",
-                'all doctors' => $doctors
+                'message' => 'all doctors',
+                'all doctors' => $doctors,
             ]
         );
     }
+
     public function getHospitalDoctors(Hospital $hospital)
     {
         $hospitalDoctors = Doctor::where('hospital_id', $hospital)->get();
@@ -142,7 +141,7 @@ class DoctorController extends Controller
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:doctors,email,' . $doctor,
+            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -227,10 +226,14 @@ class DoctorController extends Controller
         ], 200);
     }
 
-    public function fetchNotificationsFromDB(Doctor $doctor)
+    public function fetchNotificationsFromDB()
     {
 
-        // dd($doctor);
+        if (!Auth::check()) {
+            return 404;
+        }
+
+        $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
 
         $notifications = Notification::where('notifiable_id', $doctor->id)
             ->where('notifiable_type', 'App\Models\Doctor')
@@ -285,15 +288,14 @@ class DoctorController extends Controller
         ]);
     }
 
-    public function fetchingDoctorsBasedOnSpecialization(string  $specialization)
+    public function fetchingDoctorsBasedOnSpecialization(string $specialization)
     {
-
 
         $doctors = doctor::where('specialization', 'like', $specialization)->with('hospital')->get();
 
         return response()->json([
             'specialization type' => $specialization,
-            'specialized doctor' => $doctors
+            'specialized doctor' => $doctors,
         ]);
     }
 }
