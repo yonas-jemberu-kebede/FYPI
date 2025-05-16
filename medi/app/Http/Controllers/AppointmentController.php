@@ -155,6 +155,7 @@ class AppointmentController extends Controller
             ]);
         }
 
+
         if (Auth::user()->role == 'Doctor') {
             $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
             $appointments = Appointment::Where('doctor_id', $doctor->id)->get();
@@ -165,8 +166,13 @@ class AppointmentController extends Controller
                 ]);
             }
 
-            return response()->json($appointments);
-        } elseif (Auth::user()->role == 'Patient') {
+            return response()->json([
+                'patient name' => $appointments->patient->first_name,
+                'hospital name' => $appointments->hospital->name,
+                'appointment date' => $appointments->appointment_date,
+                'appointment time' => $appointments->appointment_time,
+            ]);
+        } else if (Auth::user()->role == 'Patient') {
             $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
             $appointments = Appointment::Where('patient_id', $patient->id)->get();
@@ -178,9 +184,19 @@ class AppointmentController extends Controller
                 ]);
             }
 
-            return response()->json($appointments);
-        }
-        if (Auth::user()->role == 'Hospital') {
+            $appointmentData = $appointments->map(function ($appointment) {
+                return [
+                    'doctor name' => $appointment->doctor->first_name,
+                    'hospital name' => $appointment->hospital->name,
+                    'appointment date' => $appointment->appointment_date,
+                    'appointment time' => $appointment->appointment_time,
+                ];
+            });
+
+            return response()->json(
+                $appointmentData
+            );
+        } else if (Auth::user()->role == 'Hospital') {
             $hospital = Hospital::where('id', Auth::user()->associated_id)->firstOrFail();
             $appointments = Appointment::Where('hospital_id', $hospital->id)->get();
             if ($appointments->isEmpty()) {
@@ -190,8 +206,19 @@ class AppointmentController extends Controller
                 ]);
             }
 
-            return response()->json($appointments);
+            $appointmentData = $appointments->map(function ($appointment) {
+
+                return [
+                    'patient name' => $appointment->patient->first_name,
+                    'Doctor name' => $appointment->hospital->name,
+                    'appointment date' => $appointment->appointment_date,
+                    'appointment time' => $appointment->appointment_time,
+                ];
+            });
+
+            return response()->json($appointmentData);
         }
+
     }
 
     public function cancelAppointment(Request $request)
