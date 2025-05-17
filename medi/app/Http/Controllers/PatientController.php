@@ -208,12 +208,9 @@ class PatientController extends Controller
         $now = carbon::now();
         $start = $now->toTimeString();
 
-        $day = $now->dayName;
-
         $upcomingAppoointments = Appointment::where('patient_id', $patient->id)
-            ->where('appointment_date', $day)
             ->where('appointment_time', '>', $start)
-            ->orderBy('appointment_time', 'asc')
+            ->orderBy('appointment_date', 'asc')
             ->paginate(10);
 
         if ($upcomingAppoointments->isEmpty()) {
