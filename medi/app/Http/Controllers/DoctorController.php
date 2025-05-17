@@ -141,7 +141,7 @@ class DoctorController extends Controller
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor,
+            'email' => 'nullable|email|unique:users,email|unique:doctors,email,' . $doctor,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -266,14 +266,16 @@ class DoctorController extends Controller
         $now = carbon::now();
         $start = $now->toTimeString();
 
-        $day = $now->dayName;
+        $day = $now->toDateString();
 
         $upcomingAppoointments = Appointment::where('doctor_id', $doctor->id)
-            ->where('appointment_date', $day)
-            ->where('appointment_time', '>', $start)
+            // // ->where('appointment_date', $day)
+            // ->where('appointment_time', '>', $start)
             ->orderBy('appointment_time', 'asc')
-            ->paginate(10);
+            ->get();
 
+
+        // dump($upcomingAppoointments);
         if ($upcomingAppoointments->isEmpty()) {
 
             return response()->json(
@@ -283,8 +285,19 @@ class DoctorController extends Controller
             );
         }
 
+        $appointment = $upcomingAppoointments->map(function ($appointment) {
+            return [
+                'Patient name' => $appointment->patient->first_name,
+                'Hospital name' => $appointment->hospital->name,
+                'appointment date' => $appointment->appointment_date,
+                'appointment time' => $appointment->appointment_time,
+            ];
+
+            dd($appoointment);
+        });
+
         return response()->json([
-            'upcoming appointments' => $upcomingAppoointments,
+            'upcoming appointments' => $appointment
         ]);
     }
 
