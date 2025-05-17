@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\DiagnosticCenter;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class DiagnosticCenterController extends Controller
 {
@@ -56,7 +58,7 @@ class DiagnosticCenterController extends Controller
 
         return response()->json([
             'message' => 'Diagnosic and  user created successfully',
-            'Pharmacy' => $diagnsotcCenter,
+            'diagnostic center' => $diagnsotcCenter,
             'user' => $user,
 
         ]);
@@ -115,6 +117,33 @@ class DiagnosticCenterController extends Controller
             'message' => 'DiagnosticCenter record deleted successfully',
             'record deleted for DiagnosticCenter' => $diagnosticCenterToDelete,
 
+        ]);
+    }
+
+    public function fetchNotificationsFromDB()
+    {
+
+
+        if (!Auth::check()) {
+            return 404;
+        }
+
+        $patient = DiagnosticCenter::where('id', Auth::user()->associated_id)->firstOrFail();
+
+
+        // dd($doctor);
+
+        $notifications = Notification::where('notifiable_id', $patient->id)
+            ->where('notifiable_type', 'App\Models\DiagnosticCenter')
+            ->whereNull('read_at')
+            ->get();
+
+        // Map notifications to extract the 'message' from each 'data' array
+        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+
+        return response()->json([
+            'message' => 'Notifications you haven’t read',
+            'notifications' => $notificationMessages,
         ]);
     }
 }

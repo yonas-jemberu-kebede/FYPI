@@ -12,6 +12,7 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
+use App\Models\DiagnosticCenter;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,7 @@ Route::get('/allDoctors', [DoctorController::class, 'all']);
 
 Route::get('/hospitalNotification', [HospitalController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/patientNotification', [PatientController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
+Route::get('/diagnosticNotification', [DiagnosticCenterController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
