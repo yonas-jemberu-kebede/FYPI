@@ -155,7 +155,6 @@ class AppointmentController extends Controller
             ]);
         }
 
-
         if (Auth::user()->role == 'Doctor') {
             $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
             $appointments = Appointment::Where('doctor_id', $doctor->id)->get();
@@ -172,7 +171,7 @@ class AppointmentController extends Controller
                 'appointment date' => $appointments->appointment_date,
                 'appointment time' => $appointments->appointment_time,
             ]);
-        } else if (Auth::user()->role == 'Patient') {
+        } elseif (Auth::user()->role == 'Patient') {
             $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
             $appointments = Appointment::Where('patient_id', $patient->id)->get();
@@ -196,7 +195,7 @@ class AppointmentController extends Controller
             return response()->json(
                 $appointmentData
             );
-        } else if (Auth::user()->role == 'Hospital') {
+        } elseif (Auth::user()->role == 'Hospital') {
             $hospital = Hospital::where('id', Auth::user()->associated_id)->firstOrFail();
             $appointments = Appointment::Where('hospital_id', $hospital->id)->get();
             if ($appointments->isEmpty()) {
@@ -218,10 +217,9 @@ class AppointmentController extends Controller
 
             return response()->json($appointmentData);
         }
-
     }
 
-    public function cancelAppointment(Request $request)
+    public function cancelAppointment(Request $request,Appointment $appointment)
     {
         if (! Auth::check()) {
             return response()->json([
@@ -229,9 +227,9 @@ class AppointmentController extends Controller
             ]);
         }
         $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
-        $appointment = Appointment::Where('patient_id', $patient->id)->firstOrFail();
+        $appointment = Appointment::where('id',$appointment->id)->Where('patient_id', $patient->id)->firstOrFail();
 
-        $appointment->delete();
+        $appointment->update(['status' => 'cancelled']);
 
         return response()->json([
             'message' => 'appointment cancelled successfully!',

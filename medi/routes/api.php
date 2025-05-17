@@ -34,7 +34,7 @@ Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/upcomingAppointmentForDoctor', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
 Route::get('/upcomingAppointmentForPatient', [PatientController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
-Route::delete('/cancelAppointment', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
+Route::post('/cancelAppointment/{appointment}', [AppointmentController::class, 'cancelAppointment'])->middleware('auth:sanctum');
 
 Route::post('/prescriptionCompleted/{prescription}', [PrescriptionController::class, 'prescriptionCompleted']);
 Route::get('/specializedDoctors/{specialization}', [DoctorController::class, 'fetchingDoctorsBasedOnSpecialization']);
