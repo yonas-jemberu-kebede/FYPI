@@ -188,4 +188,46 @@ class AuthController extends Controller
             'all users' => $users,
         ]);
     }
+
+    public function forgotPasswordAuth(Request $request)
+    {
+
+        $validated = $request->validate([
+
+            'email' => 'required|email|exists:users',
+            'role' => 'required|in:Patient,Doctor,Hospital Admin,Diagnostic Admin,Pharmacy Admin'
+        ]);
+
+        $user = User::where('email', $validated['email'])->where('role', $validated['role'])->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'you are not allowed to make change'
+
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'you are ready to go for password update',
+            'user_id' => $user->id
+        ]);
+    }
+
+    public function forgotPassword(Request $request, User $user)
+    {
+
+        $validated = $request->validate([
+            'password' => 'required|confirmed'
+        ]);
+        $user->update(
+            [
+                'password' => $validated['password']
+            ]
+
+
+        );
+        return response()->json([
+            'message' => 'password updated succesfully'
+        ]);
+    }
 }
