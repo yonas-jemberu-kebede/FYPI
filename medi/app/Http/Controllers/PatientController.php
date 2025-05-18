@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ForgotPassword;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\Appointment;
@@ -10,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Carbon\carbon;
 
 class PatientController extends Controller
@@ -95,7 +97,7 @@ class PatientController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
-            'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
@@ -166,11 +168,11 @@ class PatientController extends Controller
     {
 
 
-        if(!Auth::check()){
+        if (!Auth::check()) {
             return 404;
         }
 
-        $patient=Patient::where('id',Auth::user()->associated_id)->firstOrFail();
+        $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
 
         // dd($doctor);
@@ -207,11 +209,12 @@ class PatientController extends Controller
 
         $now = carbon::now();
         $start = $now->toTimeString();
+        $day = $now->toDateString();
 
         $upcomingAppoointments = Appointment::where('patient_id', $patient->id)
-            ->where('appointment_time', '>', $start)
+            ->where('appointment_date', '>', $day)
             ->orderBy('appointment_date', 'asc')
-            ->paginate(10);
+            ->get();
 
         if ($upcomingAppoointments->isEmpty()) {
 
@@ -222,17 +225,37 @@ class PatientController extends Controller
             );
         }
 
+        $appointment = $upcomingAppoointments->map(function ($appointment) {
+            return [
+                'Hospital name' => $appointment->hospital->name,
+                'Doctor name' => $appointment->doctor->first_name,
+                'Appointment Date' => $appointment->appointment_date,
+                'Appointment Time' => $appointment->appointment_time,
+            ];
+        });
+
         return response()->json([
-            'upcoming appointments' => $upcomingAppoointments,
+            'upcoming appointments' => $appointment,
         ]);
     }
 
 
+    public function forgotPassword()
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'message' => 'you are not eligible',
+            ]);
+        }
 
+        $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
+        dump($patient);
 
+        Mail::to($patient->email)->send(new ForgotPassword($patient));
 
-
-
-
+        return response()->json([
+            'message' => 'email sent'
+        ]);
+    }
 }
