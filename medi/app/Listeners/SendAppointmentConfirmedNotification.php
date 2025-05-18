@@ -33,7 +33,7 @@ class SendAppointmentConfirmedNotification
                 'notifiable_type' => 'App\Models\Patient',
                 'notifiable_id' => $event->appointment->patient_id,
                 'data' => [
-                    'message' => "Appointment Confirmed! Date: {$event->appointment->appointment_date}, Time: {$event->appointment->appointment_time}",
+                    'message' => "Appointment Confirmed! Date: {$event->appointment->appointment_date}, Time: {$event->appointment->appointment_time} With: {$event->appointment->doctor->first_name} at:{$event->appointment->hospital->name}",
                     'appointment_id' => $event->appointment->id,
                 ],
                 'read_at' => null,
@@ -53,7 +53,7 @@ class SendAppointmentConfirmedNotification
                 'notifiable_type' => 'App\Models\Hospital',
                 'notifiable_id' => $event->appointment->hospital_id,
                 'data' => [
-                    'message' => 'New Booking at your hospital',
+                    'message' => "New Booking at your hospital with: {$event->appointment->patient->first_name} {$event->appointment->patient->last_name} on {$event->appointment->appointment_date} ",
                     'appointment_id' => $event->appointment->id,
                 ],
                 'read_at' => null,
