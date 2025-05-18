@@ -16,6 +16,7 @@ return new class extends Migration
             // Used for authentication
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('otp')->nullable();
             // Role of the user
             $table->enum('role', ['Super Admin', 'Hospital Admin', 'Doctor', 'Pharmacist', 'Lab Technician', 'Patient', 'Pharmacy Admin', 'Diagnostic Admin']);
             // Links to the specific entity record (e.g., patients.id, doctors.id, etc.)
