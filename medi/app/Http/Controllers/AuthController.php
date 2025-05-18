@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ForgotPassword;
 use App\Models\DiagnosticCenter;
 use App\Models\Doctor;
 use App\Models\Hospital;
@@ -10,6 +11,8 @@ use App\Models\Pharmacy;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -192,6 +195,8 @@ class AuthController extends Controller
     public function forgotPasswordAuth(Request $request)
     {
 
+        // dd('hi');
+
         $validated = $request->validate([
 
             'email' => 'required|email|exists:users',
@@ -206,13 +211,56 @@ class AuthController extends Controller
 
             ]);
         }
+        $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'otp' => Hash::make($otp)
+        ]);
+
+
+
+        Mail::to($user->email)->send(new ForgotPassword(
+            $user,
+            $otp
+
+        ));
 
         return response()->json([
             'message' => 'you are ready to go for password update',
             'user_id' => $user->id
         ]);
     }
+    public function otpCheck(Request $request,User $user)
+    {
+        // Validate the OTP input
+        $request->validate([
+            'otp' => 'required|string|digits:6',
+        ]);
 
+
+
+        // Check if user exists and has an OTP
+        if (!$user || empty($user->otp)) {
+            return response()->json([
+                'message' => 'No OTP found for this user',
+            ], 422);
+        }
+
+        // Verify the OTP
+        if (Hash::check($request->otp, $user->otp)) {
+            // Optionally clear the OTP after successful verification
+            $user->otp = null;
+            $user->save();
+
+            return response()->json([
+                'message' => 'You are allowed to the next step',
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'Invalid OTP',
+        ], 422);
+    }
     public function forgotPassword(Request $request, User $user)
     {
 
