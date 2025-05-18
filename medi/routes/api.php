@@ -14,6 +14,7 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
 use App\Models\DiagnosticCenter;
 use App\Models\Patient;
+use App\Models\Pharmacy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,8 +29,14 @@ Route::get('/doctorNotification', [DoctorController::class, 'fetchNotificationsF
 Route::get('/allDoctors', [DoctorController::class, 'all']);
 
 Route::get('/hospitalNotification', [HospitalController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
+
+
 Route::get('/patientNotification', [PatientController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
+
+
+
 Route::get('/diagnosticNotification', [DiagnosticCenterController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
+Route::get('/pharmacyNotification', [PharmacyController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
@@ -42,6 +49,8 @@ Route::post('/prescriptionCompleted/{prescription}', [PrescriptionController::cl
 Route::get('/specializedDoctors/{specialization}', [DoctorController::class, 'fetchingDoctorsBasedOnSpecialization']);
 
 Route::get('/nearby-hospitals/{latitude}/{longitude}/{radius}', [HospitalController::class, 'getNearbyHospitals']);
+
+Route::get('/forgotPassword', [PatientController::class, 'forgotPassword'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
