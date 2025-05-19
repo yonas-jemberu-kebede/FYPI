@@ -156,11 +156,28 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // dump($request->all());
+
+        // dump($user->password);
+        // dump($user->email);
+
+        // if ($user->role == 'Doctor') {
+        //     $token = $user->createToken('auth_token')->plainTextToken;
+
+        //     return response()->json([
+        //         'message' => 'Login successful',
+        //         'token' => $token,
+        //         'user' => $user,
+        //     ]);
+        // }
+
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'error' => ['Invalid credentials.'],
             ]);
         }
+
+        dump('hi');
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -195,15 +212,14 @@ class AuthController extends Controller
     public function forgotPasswordAuth(Request $request)
     {
 
-        // dd('hi');
 
         $validated = $request->validate([
 
             'email' => 'required|email|exists:users',
-            'role' => 'required|in:Patient,Doctor,Hospital Admin,Diagnostic Admin,Pharmacy Admin'
+
         ]);
 
-        $user = User::where('email', $validated['email'])->where('role', $validated['role'])->first();
+        $user = User::where('email', $validated['email'])->first();
 
         if (!$user) {
             return response()->json([
@@ -230,14 +246,12 @@ class AuthController extends Controller
             'user_id' => $user->id
         ]);
     }
-    public function otpCheck(Request $request,User $user)
+    public function otpCheck(Request $request, User $user)
     {
         // Validate the OTP input
         $request->validate([
             'otp' => 'required|string|digits:6',
         ]);
-
-
 
         // Check if user exists and has an OTP
         if (!$user || empty($user->otp)) {
