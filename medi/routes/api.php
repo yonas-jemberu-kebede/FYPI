@@ -12,6 +12,7 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
+use App\Models\Appointment;
 use App\Models\DiagnosticCenter;
 use App\Models\Patient;
 use App\Models\Pharmacy;
@@ -61,6 +62,7 @@ Route::get('/specializedDoctors/{specialization}', [DoctorController::class, 'fe
 Route::get('/nearby-hospitals/{latitude}/{longitude}/{radius}', [HospitalController::class, 'getNearbyHospitals']);
 
 Route::get('/forgotPassword', [PatientController::class, 'forgotPassword'])->middleware('auth:sanctum');
+Route::put('/videoScheduling/{appointment}', [AppointmentController::class, 'videoChatScheduling'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

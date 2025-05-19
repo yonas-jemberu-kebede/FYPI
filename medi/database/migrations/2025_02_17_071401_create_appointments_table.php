@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 8, 2)->default(100.00);
             $table->string('status')->default('pending');
+            $table->string('video_chat_link')->nullable();
             $table->timestamps();
         });
     }

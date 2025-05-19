@@ -185,6 +185,7 @@ class AppointmentController extends Controller
 
             $appointmentData = $appointments->map(function ($appointment) {
                 return [
+
                     'doctor name' => $appointment->doctor->first_name,
                     'hospital name' => $appointment->hospital->name,
                     'appointment date' => $appointment->appointment_date,
@@ -219,7 +220,7 @@ class AppointmentController extends Controller
         }
     }
 
-    public function cancelAppointment(Request $request,Appointment $appointment)
+    public function cancelAppointment(Request $request, Appointment $appointment)
     {
         if (! Auth::check()) {
             return response()->json([
@@ -227,13 +228,38 @@ class AppointmentController extends Controller
             ]);
         }
         $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
-        $appointment = Appointment::where('id',$appointment->id)->Where('patient_id', $patient->id)->firstOrFail();
+        $appointment = Appointment::where('id', $appointment->id)->Where('patient_id', $patient->id)->firstOrFail();
 
         $appointment->update(['status' => 'cancelled']);
 
         return response()->json([
             'message' => 'appointment cancelled successfully!',
             'cancelled appointment is ' => $appointment,
+        ]);
+    }
+
+
+    public function videoChatScheduling(Appointment $appointment, Request $request)
+    {
+
+        if (!(Auth::check() && Auth::user()->role == 'Doctor')) {
+
+            return response()->json([
+                'message' => 'you are not allowed to do this'
+            ]);
+        }
+
+        $validated = $request->validate([
+            'video_chat_link' => 'required|url'
+        ]);
+
+
+        $appointment->update([
+            'video_chat_link' => $validated['video_chat_link']
+        ]);
+
+        return response()->json([
+            'message' => 'video meeting scheduled'
         ]);
     }
 }
