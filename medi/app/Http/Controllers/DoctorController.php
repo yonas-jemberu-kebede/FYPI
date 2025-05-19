@@ -141,7 +141,7 @@ class DoctorController extends Controller
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor,
+            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -173,14 +173,19 @@ class DoctorController extends Controller
             'image' => $imagePath,
         ]);
 
-        // Find the corresponding user
-        $userToBeUpdated = User::where('associated_id', $doctor)->where('role', 'Doctor')->first();
+        dump($doctor->id);
 
-        // If user exists, update their email and optionally password
+        $userToBeUpdated = User::where('role', 'Doctor')
+            ->where('associated_id', $doctor->id)
+            ->first();
+
+        dump($userToBeUpdated);
+
+        // Find the corresponding user
         if ($userToBeUpdated) {
             $updateData = [
                 'email' => $validated['email'] ?? $userToBeUpdated->email,
-                'gender' => $validated['gender'] ?? $userToBeUpdated->gender,
+                'password' => $validated['password'] ?? $userToBeUpdated->password,
             ];
 
             // Only update password if provided
@@ -188,7 +193,12 @@ class DoctorController extends Controller
                 $updateData['password'] = bcrypt($validated['password']);
             }
 
-            $userToBeUpdated->update($updateData);
+            $userToBeUpdated->update([
+                'email' => $updateData['email'],
+                'password' => $updateData['password'],
+                'role' => 'Doctor',
+                'associated_id' => $doctor->id,
+            ]);
         }
 
         return response()->json([
@@ -207,7 +217,7 @@ class DoctorController extends Controller
         $doctorToDelete = Doctor::findOrFail($id);
 
         // Find the corresponding user (if exists)
-        $userToDelete = User::where('associate_id', $id)->where('role', 'Doctor')->first();
+        $userToDelete = User::where('associated_id', $id)->where('role', 'Doctor')->first();
 
         // Delete the user if found
         if ($userToDelete) {
@@ -295,7 +305,6 @@ class DoctorController extends Controller
                 'appointment date' => $appointment->appointment_date,
                 'appointment time' => $appointment->appointment_time,
             ];
-
         });
 
         return response()->json([

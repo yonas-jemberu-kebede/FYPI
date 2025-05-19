@@ -51,7 +51,7 @@ class PharmacyController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'Pharmacy Admin',
-                'associated_id' => $pharmacy->hospital_id, // Link to the patient
+                'associated_id' => $pharmacy->id, // Link to the patient
             ]
         );
 
@@ -72,7 +72,7 @@ class PharmacyController extends Controller
 
         return response()->json([
             'message' => $singlePharmacy,
-            '',
+
         ]);
     }
 
@@ -83,23 +83,53 @@ class PharmacyController extends Controller
     {
 
         // Fetch the Pharmacy
-        $pharmacy = Pharmacy::findOrFail($id);
 
-        // Validate input while ignoring the current Pharmacy's email
+        $pharmacy = Pharmacy::where('id', $id)->first();
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|unique:pharmacies,email,'.$pharmacy->id,
-            'phone_number' => 'required|string|max:20',
-            'address' => 'required|string',
-            'hospital_id' => 'required|exists:hospitals,id', // / Password is optional on update
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,'.$pharmacy->email,
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'password' => 'nullable',
+            'hospital_id' => 'nullable|exists:hospitals,id',  // // Password is optional on update
         ]);
 
-        // Update the Pharmacy record
-        $pharmacy->update($validated);
+        // Update the DiagnosticCenter record
+        $pharmacy->update([
+            'name' => $validated['name'] ?? $pharmacy->name,
+            'email' => $validated['email'] ?? $pharmacy->email,
+            'address' => $validated['address'] ?? $pharmacy->address,
+            'phone_number' => $validated['phone_number'] ?? $pharmacy->phone_number,
+            'hospital_id' => $validated['hospital_id'] ?? $pharmacy->hospital_id,
+        ]);
+
+        $user = User::where('associated_id', $id)->where('role', 'Pharmacy Admin')->first();
+
+        if ($user) {
+
+            $updateData = [
+                'email' => $validated['email'] ?? $user->email,
+                'password' => $validated['password'] ?? $user->password,
+            ];
+
+            // Only update password if provided
+            if (! empty($validated['password'])) {
+                $updateData['password'] = bcrypt($validated['password']);
+            }
+
+            $user->update([
+                'email' => $updateData['email'],
+                'password' => $updateData['password'],
+                'role' => 'Pharmacy Admin',
+                'associated_id' => $pharmacy->id,
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Pharmacy updated successfully!',
-            'Pharmacy' => $pharmacy,
+            'message' => 'pharmacy updated successfully!',
+            'pharmacy' => $pharmacy,
+            'user' => $user->email,
         ], 200);
     }
 
@@ -108,13 +138,26 @@ class PharmacyController extends Controller
      */
     public function destroy(string $id)
     {
-        $pharmacyToDelete = Pharmacy::findOrFail($id);
-        $pharmacyToDelete->delete();
+
+        $pharmacy = Pharmacy::where('id', $id)->first();
+
+        $UserToDelete = User::where('role', 'Pharmacy Admin')
+            ->where('associated_id', $pharmacy->id)->first();
+
+        dump($UserToDelete);
+
+        if ($UserToDelete) {
+            $UserToDelete->delete();
+        } else {
+            return 'no corresponding user account to be deleted';
+        }
+
+        $pharmacy->delete();
 
         return response()->json([
-            'message' => 'Pharmacy record deleted successfully',
-            'record deleted for Pharmacy' => $pharmacyToDelete,
-
+            'message' => 'pharmacy record deleted successfully',
+            'record deleted for pharamcy' => $pharmacy,
+            'record deleted for user' => $UserToDelete,
         ]);
     }
 

@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']); // Register using email
 
+Route::put('diagnosticCenters/{id}', [DiagnosticCenterController::class, 'update']);
+
 Route::get('/forgotPasswordAuth', [AuthController::class, 'forgotPasswordAuth']);
 
 Route::get('/otpCheck/{user}', [AuthController::class, 'otpCheck']);
@@ -79,15 +81,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 Route::delete('hospitals/{hospital}', [HospitalController::class, 'destroy']);
+
+Route::put('hospitals/{hospital}', [HospitalController::class, 'update']);
+
+Route::delete('patient/{patient}', [PatientController::class, 'destroy']);
+Route::delete('doctor/{doctor}', [DoctorController::class, 'destroy']);
+
 Route::put('/doctors/{doctor}', [DoctorController::class, 'update']);
-// Route::put('hospitals/{hospital}', [HospitalController::class,'update']);
+
 Route::resource('patients', PatientController::class);
 Route::resource('hospitals', HospitalController::class);
 Route::resource('doctors', DoctorController::class);
 Route::resource('pharmacies', PharmacyController::class);
 Route::resource('diagnosticcenters', DiagnosticCenterController::class);
-Route::resource('pharmacists', PharmacistController::class);
-Route::resource('labtechnicians', LabTechnicianController::class);
 
 // Route::post('/appointments/book', [AppointmentController::class, 'book']);
 Route::get('/appointments/withDoctors', [AppointmentController::class, 'listDoctorsWithThierHospital']);

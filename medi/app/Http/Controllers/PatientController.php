@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Notification;
 use App\Models\Patient;
+use App\Models\Prescription;
+
 use App\Models\User;
+use App\Models\Test;
 use Carbon\carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,8 +90,6 @@ class PatientController extends Controller
 
         // Fetch the patient
 
-        dump($patient);
-
         // Validate input while ignoring the current patient's email
         $validated = $request->validate([
             'first_name' => 'nullable|string|max:255',
@@ -111,16 +112,14 @@ class PatientController extends Controller
             'phone_number' => $validated['phone_number'] ?? $patient->phone_number,
         ]);
 
-        dump($patient);
-
         // Find the corresponding user
         $userToBeUpdated = User::where('associated_id', $patient->id)->where('role', 'Patient')->first();
 
         // If user exists, update their email and optionally password
         if ($userToBeUpdated) {
             $updateData = [
-                'email' => $validated['email'] ?? $patient->email,
-                'password' => $validated['password'] ?? $patient->password,
+                'email' => $validated['email'] ?? $userToBeUpdated->email,
+                'password' => $validated['password'] ?? $userToBeUpdated->password,
             ];
 
             // Only update password if provided
@@ -128,7 +127,12 @@ class PatientController extends Controller
                 $updateData['password'] = bcrypt($validated['password']);
             }
 
-            $userToBeUpdated->update($updateData);
+            $userToBeUpdated->update([
+                'email' => $updateData['email'],
+                'password' => $updateData['password'],
+                'role' => 'Patient',
+                'associated_id' => $patient->id,
+            ]);
         }
 
         return response()->json([
@@ -141,22 +145,22 @@ class PatientController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Patient $patient)
     {
-        $patientToDelete = Patient::findOrFail($id);
-        $UserToDelete = User::where('associate_id', $id)->where('role', 'Patient')->first();
+
+        $UserToDelete = User::where('associated_id', $patient->id)->where('role', 'Patient')->first();
 
         if ($UserToDelete) {
             $UserToDelete->delete();
         } else {
-            $userToDelete = 'no corresponding user account to be deleted';
+            return 'no corresponding user account to be deleted';
         }
 
-        $patientToDelete->delete();
+        $patient->delete();
 
         return response()->json([
             'message' => 'patient record deleted successfully',
-            'record deleted for patient' => $patientToDelete,
+            'record deleted for patient' => $patient,
             'record deleted for user' => $UserToDelete,
         ]);
     }
@@ -240,5 +244,32 @@ class PatientController extends Controller
         return response()->json([
             'upcoming appointments' => $appointment,
         ]);
+    }
+
+    public function patientHistory(){
+
+        $appointment=Appointment::where('patient_id',Auth::user()->associated_id)->first();
+
+        $doctorName=$appointment->doctor->first_name;
+        $hospitalName=$appointment->hospital->name;
+
+
+        $test =Test::where('patient_id', Auth::user()->associated_id)->first();
+
+        $testResult=$test->test_results;
+        $prescription=Prescription::where('patient_id', Auth::user()->associated_id)->first();
+        $medications=$prescription->medications;
+
+        return response()->json([
+            'message'=>"patient history",
+            'history'=>[
+                'hospital name'=>$hospitalName,
+                'doctor name'=>$doctorName,
+                'test result'=>$testResult,
+                'medication'=>$medications,
+                'appointment date'=>$appointment->appointment_date,
+                'appointment time'=>$appointment->appointment_time,
+            ]
+            ]);
     }
 }

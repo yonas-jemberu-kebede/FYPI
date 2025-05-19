@@ -36,7 +36,7 @@ class HospitalController extends Controller
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
             'account' => 'required|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'required|image|mimes:jpg,jpeg,png',
             'password' => 'required|string|min:8', // confirmed
 
             'city' => 'nullable|string',
@@ -123,11 +123,13 @@ class HospitalController extends Controller
 
         // Validate input while ignoring the current Hospital's email
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => "required|email|unique:users,email|unique:hospitals,email,{$hospital->id}",
-            'phone_number' => 'required|string|max:20',
-            'address' => 'required|string',
-            'account' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:users,email|unique:hospitals,email,'.$hospital->email,
+
+            'phone_number' => 'nullable|string|max:20',
+
+            'address' => 'nullable|string',
+            'account' => 'nullable|string',
             'city' => 'nullable|string',
             'country' => 'nullable|string',
             'longitude' => 'nullable|numeric|between:-90,90',
@@ -138,41 +140,67 @@ class HospitalController extends Controller
             'operating_hours' => 'nullable|integer',
         ]);
 
-        try {
-            $hospital->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'address' => $validated['address'],
-                'phone_number' => $validated['phone_number'],
-                'city' => $validated['city'] ?? null,
-                'country' => $validated['country'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
-                'latitude' => $validated['latitude'] ?? null,
-                'hospital_type' => $validated['hospital_type'] ?? null,
-                'established_year' => $validated['established_year'] ?? null,
-                'operating_hours' => $validated['operating_hours'] ?? null,
-                'icu_capacity' => $validated['icu_capacity'] ?? null,
-                'account' => bcrypt($validated['account']), // or encrypt() if needed
+        $hospital->update([
+            'name' => $validated['name'] ?? $hospital->name,
+            'email' => $validated['email'] ?? $hospital->email,
+            'address' => $validated['address'] ?? $hospital->address,
+            'phone_number' => $validated['phone_number'] ?? $hospital->phone_number,
+            'city' => $validated['city'] ?? $hospital->city,
+            'country' => $validated['country'] ?? $hospital->country,
+            'longitude' => $validated['longitude'] ?? $hospital->longitude,
+            'latitude' => $validated['latitude'] ?? $hospital->latitude,
+            'hospital_type' => $validated['hospital_type'] ?? $hospital->hospital_type,
+            'established_year' => $validated['established_year'] ?? $hospital->established_year,
+            'operating_hours' => $validated['operating_hours'] ?? $hospital->operating_hours,
+            'icu_capacity' => $validated['icu_capacity'] ?? $hospital->icu_capacity,
+            'account' => bcrypt($validated['account']) ?? $hospital->account, // or encrypt() if needed
+        ]);
+
+        $user = User::where('associated_id', $hospital->id)->where('role', 'Hospital Admin')->first();
+
+        if ($user) {
+            $updateData = [
+                'email' => $validated['email'] ?? $user->email,
+                'password' => $validated['password'] ?? $user->password,
+            ];
+
+            // Only update password if provided
+            if (! empty($validated['password'])) {
+                $updateData['password'] = bcrypt($validated['password']);
+            }
+
+            $user->update([
+                'email' => $updateData['email'],
+                'password' => $updateData['password'],
+                'role' => 'Hospital Admin',
+                'associated_id' => $hospital->id,
             ]);
 
             return response()->json([
                 'message' => 'Hospital updated successfully!',
                 'hospital' => $hospital,
+                'user' => $user,
             ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Update failed: '.$e->getMessage()], 500);
         }
     }
 
     public function destroy(Hospital $hospital)
     {
 
+        $UserToDelete = User::where('associated_id', $hospital->id)->where('role', 'Hospital Admin')->first();
+
+        if ($UserToDelete) {
+            $UserToDelete->delete();
+        } else {
+            return 'no corresponding user account to be deleted';
+        }
+
         $hospital->delete();
 
         return response()->json([
             'message' => 'Hospital record deleted successfully',
             'record deleted for Hospital' => $hospital,
-
+            'record deleted for user' => $UserToDelete,
         ]);
     }
 
