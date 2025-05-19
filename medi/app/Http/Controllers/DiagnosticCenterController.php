@@ -128,18 +128,29 @@ class DiagnosticCenterController extends Controller
             return 404;
         }
 
-        $patient = DiagnosticCenter::where('id', Auth::user()->associated_id)->firstOrFail();
+        // dd(Auth::user());
+
+        $diagnostic = DiagnosticCenter::where('id', Auth::user()->associated_id)->firstOrFail();
 
 
-        // dd($doctor);
 
-        $notifications = Notification::where('notifiable_id', $patient->id)
-            ->where('notifiable_type', 'App\Models\DiagnosticCenter')
-            ->whereNull('read_at')
+
+        $notifications = Notification::where('notifiable_type', 'App\Models\DiagnosticCenter')
+            ->where('notifiable_id', $diagnostic->id)
+            ->where('status','pending')
             ->get();
 
+        // $notification = $notifications->map(function ($notification) {
+        //     return [
+        //         'data' => $notification->data
+        //     ];
+        // });
+
         // Map notifications to extract the 'message' from each 'data' array
-        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+        $notificationMessages = $notifications->map(function($not){
+            $not->update(['status'=>'checked']);
+            return $not->data;
+        }); // Remove null values and convert to array
 
         return response()->json([
             'message' => 'Notifications you haven’t read',
