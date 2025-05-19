@@ -113,7 +113,6 @@ class DoctorController extends Controller
             'user' => $user,
         ]);
     }
-
     /**
      * Display the specified resource.
      */
@@ -229,23 +228,27 @@ class DoctorController extends Controller
     public function fetchNotificationsFromDB()
     {
 
+
         if (!Auth::check()) {
             return 404;
         }
 
         $doctor = Doctor::where('id', Auth::user()->associated_id)->firstOrFail();
-
         $notifications = Notification::where('notifiable_id', $doctor->id)
             ->where('notifiable_type', 'App\Models\Doctor')
-            ->whereNull('read_at')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        // Map notifications to extract the 'message' from each 'data' array
-        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+        $notification = $notifications->map(function ($not) {
+
+            $not->update(['status' => 'checked']);
+            return $not->data;
+        });
 
         return response()->json([
             'message' => 'Notifications you haven’t read',
-            'notifications' => $notificationMessages,
+            'notifications' => $notification,
         ]);
     }
 
@@ -293,7 +296,7 @@ class DoctorController extends Controller
                 'appointment time' => $appointment->appointment_time,
             ];
 
-            dd($appoointment);
+
         });
 
         return response()->json([

@@ -169,7 +169,9 @@ class PatientController extends Controller
 
 
         if (!Auth::check()) {
-            return 404;
+            return response()->json([
+                'message' => 'not authorized'
+            ]);
         }
 
         $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
@@ -179,15 +181,22 @@ class PatientController extends Controller
 
         $notifications = Notification::where('notifiable_id', $patient->id)
             ->where('notifiable_type', 'App\Models\Patient')
-            ->whereNull('read_at')
+            ->where('status','pending')
+            ->orderBy('created_at','desc')
             ->get();
 
+            $notification=$notifications->map(function ($not){
+
+            $not->update(['status' => 'checked']);
+                return $not->data;
+            });
+
         // Map notifications to extract the 'message' from each 'data' array
-        $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+       //$notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
 
         return response()->json([
             'message' => 'Notifications you haven’t read',
-            'notifications' => $notificationMessages,
+            'notifications' => $notification,
         ]);
     }
 
@@ -240,22 +249,5 @@ class PatientController extends Controller
     }
 
 
-    public function forgotPassword()
-    {
-        if (! Auth::check()) {
-            return response()->json([
-                'message' => 'you are not eligible',
-            ]);
-        }
 
-        $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
-
-        dump($patient);
-
-        Mail::to($patient->email)->send(new ForgotPassword($patient));
-
-        return response()->json([
-            'message' => 'email sent'
-        ]);
-    }
 }

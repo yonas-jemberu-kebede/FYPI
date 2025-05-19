@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('notifiable_id');
             $table->json('data');
             $table->datetime('read_at')->default(null)->nullable();
+            $table->string('status')->default('pending');
             // Add a generated column for appointment_id
             $table->unsignedBigInteger('appointment_id')->nullable()->stored()->generatedAs('JSON_UNQUOTE(JSON_EXTRACT(data, "$.appointment_id"))');
             $table->timestamps();
