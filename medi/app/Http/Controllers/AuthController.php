@@ -10,9 +10,9 @@ use App\Models\Patient;
 use App\Models\Pharmacy;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -212,7 +212,6 @@ class AuthController extends Controller
     public function forgotPasswordAuth(Request $request)
     {
 
-
         $validated = $request->validate([
 
             'email' => 'required|email|exists:users',
@@ -221,19 +220,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'message' => 'you are not allowed to make change'
+                'message' => 'you are not allowed to make change',
 
             ]);
         }
         $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $user->update([
-            'otp' => Hash::make($otp)
+            'otp' => Hash::make($otp),
         ]);
-
-
 
         Mail::to($user->email)->send(new ForgotPassword(
             $user,
@@ -243,9 +240,10 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'you are ready to go for password update',
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
     }
+
     public function otpCheck(Request $request, User $user)
     {
         // Validate the OTP input
@@ -254,7 +252,7 @@ class AuthController extends Controller
         ]);
 
         // Check if user exists and has an OTP
-        if (!$user || empty($user->otp)) {
+        if (! $user || empty($user->otp)) {
             return response()->json([
                 'message' => 'No OTP found for this user',
             ], 422);
@@ -275,21 +273,22 @@ class AuthController extends Controller
             'message' => 'Invalid OTP',
         ], 422);
     }
+
     public function forgotPassword(Request $request, User $user)
     {
 
         $validated = $request->validate([
-            'password' => 'required|confirmed'
+            'password' => 'required|confirmed',
         ]);
         $user->update(
             [
-                'password' => $validated['password']
+                'password' => $validated['password'],
             ]
 
-
         );
+
         return response()->json([
-            'message' => 'password updated succesfully'
+            'message' => 'password updated succesfully',
         ]);
     }
 }

@@ -6,8 +6,8 @@ use App\Models\DiagnosticCenter;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class DiagnosticCenterController extends Controller
 {
@@ -123,8 +123,7 @@ class DiagnosticCenterController extends Controller
     public function fetchNotificationsFromDB()
     {
 
-
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return 404;
         }
 
@@ -132,12 +131,9 @@ class DiagnosticCenterController extends Controller
 
         $diagnostic = DiagnosticCenter::where('id', Auth::user()->associated_id)->firstOrFail();
 
-
-
-
         $notifications = Notification::where('notifiable_type', 'App\Models\DiagnosticCenter')
             ->where('notifiable_id', $diagnostic->id)
-            ->where('status','pending')
+            ->where('status', 'pending')
             ->get();
 
         // $notification = $notifications->map(function ($notification) {
@@ -147,8 +143,9 @@ class DiagnosticCenterController extends Controller
         // });
 
         // Map notifications to extract the 'message' from each 'data' array
-        $notificationMessages = $notifications->map(function($not){
-            $not->update(['status'=>'checked']);
+        $notificationMessages = $notifications->map(function ($not) {
+            $not->update(['status' => 'checked']);
+
             return $not->data;
         }); // Remove null values and convert to array
 

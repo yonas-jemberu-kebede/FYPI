@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\Pharmacy;
 use App\Models\User;
-use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class PharmacyController extends Controller
 {
@@ -121,25 +121,24 @@ class PharmacyController extends Controller
     public function fetchNotificationsFromDB()
     {
 
-
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return 404;
         }
 
         $pharmacy = Pharmacy::where('id', Auth::user()->associated_id)->firstOrFail();
 
-
         // dd($doctor);
 
         $notifications = Notification::where('notifiable_id', $pharmacy->id)
             ->where('notifiable_type', 'App\Models\Pharmacy')
-            ->whereNull('status','pending')
+            ->whereNull('status', 'pending')
             ->get();
 
         // Map notifications to extract the 'message' from each 'data' array
-        $notificationMessages = $notifications->map(function($not){
+        $notificationMessages = $notifications->map(function ($not) {
 
-            $not->update(['status'=>'pending']);
+            $not->update(['status' => 'pending']);
+
             return $not->data;
         });
 

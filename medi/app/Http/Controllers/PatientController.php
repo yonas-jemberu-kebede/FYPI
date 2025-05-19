@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ForgotPassword;
+use App\Models\Appointment;
 use App\Models\Notification;
 use App\Models\Patient;
-use App\Models\Appointment;
-
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Carbon\carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class PatientController extends Controller
 {
@@ -97,7 +94,7 @@ class PatientController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
-            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
@@ -167,40 +164,37 @@ class PatientController extends Controller
     public function fetchNotificationsFromDB()
     {
 
-
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
-                'message' => 'not authorized'
+                'message' => 'not authorized',
             ]);
         }
 
         $patient = Patient::where('id', Auth::user()->associated_id)->firstOrFail();
 
-
         // dd($doctor);
 
         $notifications = Notification::where('notifiable_id', $patient->id)
             ->where('notifiable_type', 'App\Models\Patient')
-            ->where('status','pending')
-            ->orderBy('created_at','desc')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
             ->get();
 
-            $notification=$notifications->map(function ($not){
+        $notification = $notifications->map(function ($not) {
 
             $not->update(['status' => 'checked']);
-                return $not->data;
-            });
+
+            return $not->data;
+        });
 
         // Map notifications to extract the 'message' from each 'data' array
-       //$notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
+        // $notificationMessages = $notifications->pluck('data')->toArray(); // Remove null values and convert to array
 
         return response()->json([
             'message' => 'Notifications you haven’t read',
             'notifications' => $notification,
         ]);
     }
-
-
 
     public function upcomingAppointment()
     {
@@ -247,7 +241,4 @@ class PatientController extends Controller
             'upcoming appointments' => $appointment,
         ]);
     }
-
-
-
 }

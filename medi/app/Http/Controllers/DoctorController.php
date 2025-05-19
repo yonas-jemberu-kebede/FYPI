@@ -113,6 +113,7 @@ class DoctorController extends Controller
             'user' => $user,
         ]);
     }
+
     /**
      * Display the specified resource.
      */
@@ -140,7 +141,7 @@ class DoctorController extends Controller
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email' => 'nullable|email|unique:users,email|unique:doctors,email,' . $doctor,
+            'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'hospital_id' => 'nullable|exists:hospitals,id',
@@ -228,8 +229,7 @@ class DoctorController extends Controller
     public function fetchNotificationsFromDB()
     {
 
-
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return 404;
         }
 
@@ -243,6 +243,7 @@ class DoctorController extends Controller
         $notification = $notifications->map(function ($not) {
 
             $not->update(['status' => 'checked']);
+
             return $not->data;
         });
 
@@ -277,7 +278,6 @@ class DoctorController extends Controller
             ->orderBy('appointment_time', 'asc')
             ->get();
 
-
         // dump($upcomingAppoointments);
         if ($upcomingAppoointments->isEmpty()) {
 
@@ -296,11 +296,10 @@ class DoctorController extends Controller
                 'appointment time' => $appointment->appointment_time,
             ];
 
-
         });
 
         return response()->json([
-            'upcoming appointments' => $appointment
+            'upcoming appointments' => $appointment,
         ]);
     }
 

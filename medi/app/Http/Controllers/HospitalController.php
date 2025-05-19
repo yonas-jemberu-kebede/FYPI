@@ -6,11 +6,10 @@ use App\Mail\HospitalMail;
 use App\Models\Hospital;
 use App\Models\Notification;
 use App\Models\User;
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\AUth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\AUth;
 
 class HospitalController extends Controller
 {
@@ -180,7 +179,7 @@ class HospitalController extends Controller
     public function fetchNotificationsFromDB()
     {
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return 404;
         }
 

@@ -62,7 +62,7 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
+        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
 
         $chapaSecretKey = $hospital->account;
 
@@ -70,7 +70,7 @@ class TestController extends Controller
         $email = $patient->email;
 
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $chapaSecretKey,
+            'Authorization' => 'Bearer '.$chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -122,7 +122,7 @@ class TestController extends Controller
         event(new TestPaymentRequested($pendingTesting, $payment));
 
         return response()->json([
-            //this needs to be changed with pages,patient needs to finalize the payment theough email only
+            // this needs to be changed with pages,patient needs to finalize the payment theough email only
             'checkout_url' => $responseData['data']['checkout_url'],
         ]);
     }

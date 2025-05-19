@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -17,13 +16,14 @@ class ForgotPassword extends Mailable
     /**
      * Create a new message instance.
      */
-
     public $otp;
+
     public $user;
+
     public function __construct(User $user, $otp)
     {
-        $this->otp= $otp;
-        $this->user= $user;
+        $this->otp = $otp;
+        $this->user = $user;
     }
 
     /**
@@ -42,13 +42,12 @@ class ForgotPassword extends Mailable
     public function content(): Content
     {
 
-
         return new Content(
             view: 'mail.forgot_password',
             with: [
 
                 'otp' => $this->otp,
-                'user_email'=>$this->user->email
+                'user_email' => $this->user->email,
             ]
         );
     }

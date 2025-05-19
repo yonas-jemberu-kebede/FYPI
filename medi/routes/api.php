@@ -12,10 +12,7 @@ use App\Http\Controllers\PharmacistController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
-use App\Models\Appointment;
-use App\Models\DiagnosticCenter;
 use App\Models\Patient;
-use App\Models\Pharmacy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,8 +23,6 @@ Route::get('/forgotPasswordAuth', [AuthController::class, 'forgotPasswordAuth'])
 Route::get('/otpCheck/{user}', [AuthController::class, 'otpCheck']);
 
 Route::put('/forgotPassword/{user}', [AuthController::class, 'forgotPassword']);
-
-
 
 // Register using email
 Route::post('/login', [AuthController::class, 'login'])->name('login'); // Login using email
@@ -41,10 +36,7 @@ Route::get('/allDoctors', [DoctorController::class, 'all']);
 
 Route::get('/hospitalNotification', [HospitalController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 
-
 Route::get('/patientNotification', [PatientController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
-
-
 
 Route::get('/diagnosticNotification', [DiagnosticCenterController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');
 Route::get('/pharmacyNotification', [PharmacyController::class, 'fetchNotificationsFromDB'])->middleware('auth:sanctum');

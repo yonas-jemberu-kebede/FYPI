@@ -100,7 +100,7 @@ class AppointmentController extends Controller
 
         $patient = Patient::where('id', $associateId->associated_id)->firstOrFail();
 
-        $txRef = 'APPT-' . uniqid();
+        $txRef = 'APPT-'.uniqid();
 
         // Step 4: Organize temporary data
         $pendingData = [
@@ -238,28 +238,26 @@ class AppointmentController extends Controller
         ]);
     }
 
-
     public function videoChatScheduling(Appointment $appointment, Request $request)
     {
 
-        if (!(Auth::check() && Auth::user()->role == 'Doctor')) {
+        if (! (Auth::check() && Auth::user()->role == 'Doctor')) {
 
             return response()->json([
-                'message' => 'you are not allowed to do this'
+                'message' => 'you are not allowed to do this',
             ]);
         }
 
         $validated = $request->validate([
-            'video_chat_link' => 'required|url'
+            'video_chat_link' => 'required|url',
         ]);
 
-
         $appointment->update([
-            'video_chat_link' => $validated['video_chat_link']
+            'video_chat_link' => $validated['video_chat_link'],
         ]);
 
         return response()->json([
-            'message' => 'video meeting scheduled'
+            'message' => 'video meeting scheduled',
         ]);
     }
 }
