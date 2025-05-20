@@ -88,7 +88,7 @@ class PharmacyController extends Controller
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,' . $pharmacy->email,
+            'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,'.$pharmacy->email,
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'password' => 'nullable',

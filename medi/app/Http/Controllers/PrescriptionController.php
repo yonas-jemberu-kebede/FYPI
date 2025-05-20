@@ -82,7 +82,6 @@ class PrescriptionController extends Controller
         // }
 
         $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
-       
 
         $pharmacyId = $hospital->pharmacy->id;
 
@@ -106,13 +105,12 @@ class PrescriptionController extends Controller
         }
 
         // Initialize payment
-        $txRef = 'PRESCRIPTION-' . $pendingPrescription->id . '-' . time();
+        $txRef = 'PRESCRIPTION-'.$pendingPrescription->id.'-'.time();
 
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
 
-
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $hospital->account,
+            'Authorization' => 'Bearer '.$hospital->account,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',

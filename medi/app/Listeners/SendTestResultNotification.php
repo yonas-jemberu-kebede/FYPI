@@ -8,6 +8,7 @@ use App\Models\Doctor;
 use App\Models\Notification;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Mail;
+use NunoMaduro\Collision\Adapters\Phpunit\TestResult;
 
 class SendTestResultNotification
 {
@@ -24,25 +25,24 @@ class SendTestResultNotification
     /**
      * Handle the event.
      */
-    public function handle(object $event): void
+    public function handle(TestResultReady $event): void
     {
         Notification::create([
             'type' => 'test completed',
-            'notification_type' => Doctor::class,
-            'notification_id' => $this->test->doctor->id,
+            'notifiable_type' => 'App\Models\Doctor',
+            'notifiable_id' => $event->test->doctor_id,
             'data' => [
-                'message' => "tes result has arrived {$this->test->test_result}",
+                'message' => "tes result has arrived {$event->test->test_result}",
             ],
         ]);
         Notification::create([
             'type' => 'test completed',
-            'notification_type' => Patient::class,
-            'notification_id' => $this->test->patient->id,
+            'notifiable_type' => 'App\Models\Patient',
+            'notifiable_id' => $event->test->patient_id,
             'data' => [
-                'message' => "tes result has arrived {$this->test->test_result}",
+                'message' => "tes result has arrived {$event->test->test_result}",
             ],
         ]);
 
-        Mail::to($this->test->patient->email)->send(new PatientResultNotification($this->test));
     }
 }

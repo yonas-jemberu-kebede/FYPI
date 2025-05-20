@@ -45,7 +45,6 @@ Route::get('/pharmacyNotification', [PharmacyController::class, 'fetchNotificati
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
-
 Route::get('/fetchVideoLinkForPatient', [PatientController::class, 'fetchVideoLink'])->middleware('auth:sanctum');
 Route::get('/fetchVideoLinkForDoctor', [DoctorController::class, 'fetchVideoLink'])->middleware('auth:sanctum');
 Route::get('/patientHistory', [PatientController::class, 'patientHistory'])->middleware('auth:sanctum');
@@ -115,10 +114,7 @@ Route::get('/user', function (Request $request) {
 Route::post('/prescription/request', [PrescriptionController::class, 'makeRequest']);
 
 Route::post('/test/request', [TestController::class, 'makeRequest']);
+Route::put('/test/result/{test}', [TestController::class, 'completeTest']);
 
 Route::get('/prescription/paymentWebhookHandling/{txRef}', [PrescriptionController::class, 'webhookHandlingForPrescription'])->name('prescription.return');
 Route::get('/test/paymentWebhookHandling/{txRef}', [TestController::class, 'webhookHandlingForTesting'])->name('test.return');
-
-
-
-

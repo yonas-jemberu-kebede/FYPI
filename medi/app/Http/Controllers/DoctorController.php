@@ -332,19 +332,18 @@ class DoctorController extends Controller
 
         $appointments = Appointment::where('doctor_id', Auth::user()->associated_id)
             ->where('video_chat_link_date', $date)
-            ->orderBy('video_chat_link_date','asc')
+            ->orderBy('video_chat_link_date', 'asc')
             ->get();
 
         $appointment = $appointments->map(function ($app) {
             return [
-                'link'=>$app->video_chat_link,
-                'chat date'=>$app->video_chat_link_date
+                'link' => $app->video_chat_link,
+                'chat date' => $app->video_chat_link_date,
             ];
         });
 
-
         return response()->json([
-            'video_chat_link' => $appointment
+            'video_chat_link' => $appointment,
         ]);
     }
 }

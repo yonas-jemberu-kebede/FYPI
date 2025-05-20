@@ -6,6 +6,8 @@ use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
 use App\Events\TestResultReady;
 use App\Mail\TestPaymentRequestEmail;
+use App\Mail\TestPaymentReadyEmail;
+use App\Mail\TestResultMail;
 use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\LabTechnician;
@@ -32,10 +34,10 @@ class TestController extends Controller
             'test_ids' => 'required|array|exists:test_prices,id',
         ]);
 
-        // dump($validated);
+        //dump($validated);
         $testIds = $validated['test_ids'];
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
-
+        // dump($totalAmount);
         // $now = Carbon::now();
 
         // $currentDay = strtolower($now->dayName);
@@ -51,6 +53,7 @@ class TestController extends Controller
         // $labTechnicianId = $labTechnician ? $labTechnician->id : null;
 
         $hospital = Hospital::where('id', $validated['hospital_id'])->firstOrFail();
+        // dump($hospital->id);
         $diagnosticCenterId = $hospital->diagnosticCenter->id;
 
         $pendingTesting = PendingTesting::create([
@@ -62,15 +65,15 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
+        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
 
         $chapaSecretKey = $hospital->account;
 
         $patient = Patient::where('id', $validated['patient_id'])->firstOrFail();
         $email = $patient->email;
-
+        // dump($email);
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer '.$chapaSecretKey,
+            'Authorization' => 'Bearer ' . $chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -161,6 +164,7 @@ class TestController extends Controller
 
     public function completeTest(Request $request, Test $test)
     {
+
         // Validate the incoming request data
         $validated = $request->validate([
 
@@ -173,8 +177,14 @@ class TestController extends Controller
             'status' => 'completed',
         ]);
 
+
+
         // Trigger the TestResultReady event
         event(new TestResultReady($test));
+
+
+
+        Mail::to($test->patient->email)->send(new TestResultMail($test));
 
         // Return a success response
         return response()->json(['message' => 'Test completed']);

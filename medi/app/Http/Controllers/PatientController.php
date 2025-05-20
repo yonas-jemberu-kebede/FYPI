@@ -6,9 +6,8 @@ use App\Models\Appointment;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\Prescription;
-
-use App\Models\User;
 use App\Models\Test;
+use App\Models\User;
 use Carbon\carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -95,7 +94,7 @@ class PatientController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
-            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
@@ -246,8 +245,6 @@ class PatientController extends Controller
         ]);
     }
 
-
-
     public function fetchVideoLink()
     {
 
@@ -263,16 +260,14 @@ class PatientController extends Controller
         $appointment = $appointments->map(function ($app) {
             return [
                 'link' => $app->video_chat_link,
-                'chat date' => $app->video_chat_link_date
+                'chat date' => $app->video_chat_link_date,
             ];
         });
 
-
         return response()->json([
-            'video_chat_link' => $appointment
+            'video_chat_link' => $appointment,
         ]);
     }
-
 
     public function patientHistory()
     {
