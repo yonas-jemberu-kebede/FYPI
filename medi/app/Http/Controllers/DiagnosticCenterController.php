@@ -30,9 +30,9 @@ class DiagnosticCenterController extends Controller
     {
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|alpha',
             'email' => 'required|email|unique:users,email',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => 'required|string|max:13',
             'address' => 'required|string',
             'hospital_id' => 'required|exists:hospitals,id', // Needed for User creation
             'password' => 'required|confirmed', // Needed for User creation

@@ -65,14 +65,15 @@ class DoctorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255|alpha',
+            'last_name' => 'required|string|max:255|alpha',
+            'phone_number' => 'required|string|max:13',
             'date_of_birth' => 'required|date',
             'experience' => 'required|integer',
             'specialization' => 'required|string',
             'email' => 'required|email|unique:users,email|unique:doctors,email',
             'gender' => 'required|in:Male,Female',
-            'phone_number' => 'required|string|max:20',
+
             'hospital_id' => 'required|exists:hospitals,id',
 
             'image' => 'required|image|mimes:jpg,jpeg,png',
@@ -136,14 +137,14 @@ class DoctorController extends Controller
 
         // Validate input while ignoring the current Doctor's email
         $validated = $request->validate([
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
+            'first_name' => 'nullable|string|max:255|alpha',
+            'last_name' => 'nullable|string|max:255|alpha',
             'date_of_birth' => 'nullable|date',
             'experience' => 'nullable|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'email' => 'nullable|email|unique:users,email|unique:doctors,email,'.$doctor->email,
             'gender' => 'nullable|in:Male,Female',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:13',
             'hospital_id' => 'nullable|exists:hospitals,id',
             'password' => 'nullable|string|min:6', // Password is optional on update
         ]);

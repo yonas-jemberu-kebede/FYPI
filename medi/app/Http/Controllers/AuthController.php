@@ -24,7 +24,7 @@ class AuthController extends Controller
 
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:13',
             'role' => 'nullable|in:Patient,Doctor,Hospital Admin,Super Admin,Diagnostic Admin,Pharmacy Admin',
 
         ];
@@ -41,9 +41,9 @@ class AuthController extends Controller
             // ],
 
             'Patient' => [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'gender' => 'required|in:Male,Female,Other',
+                'first_name' => 'required|string|max:255|alpha',
+                'last_name' => 'required|string|max:255|alpha',
+                'gender' => 'required|in:Male,Female',
                 'date_of_birth' => 'required|date|before:-18 years',
             ],
             // 'Pharmacy Admin' => [

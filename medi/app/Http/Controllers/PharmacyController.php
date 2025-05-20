@@ -29,9 +29,9 @@ class PharmacyController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|alpha',
             'email' => 'required|email|unique:users,email|unique:pharmacies,email,',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => 'required|string|max:13',
             'address' => 'required|string',
             'hospital_id' => 'required|exists:hospitals,id', // Needed for User creation
             'password' => 'required|confirmed', // Needed for User creation
@@ -87,9 +87,9 @@ class PharmacyController extends Controller
         $pharmacy = Pharmacy::where('id', $id)->first();
 
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255|alpha',
             'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,'.$pharmacy->email,
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:13',
             'address' => 'nullable|string',
             'password' => 'nullable',
             'hospital_id' => 'nullable|exists:hospitals,id',  // // Password is optional on update

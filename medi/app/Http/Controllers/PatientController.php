@@ -34,12 +34,13 @@ class PatientController extends Controller
     {
 
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255|alpha',
+            'last_name' => 'required|string|max:255|alpha',
+            'phone_number' => 'required|string|max:13',
             'date_of_birth' => 'required|date',
             'email' => 'required|email|unique:users,email|unique:patients,email',
             'gender' => 'required|in:Male,Female',
-            'phone_number' => 'required|string|max:20',
+
             'password' => 'required|string|min:6', // Needed for User creation
         ]);
 
@@ -91,12 +92,12 @@ class PatientController extends Controller
 
         // Validate input while ignoring the current patient's email
         $validated = $request->validate([
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
+            'first_name' => 'nullable|string|max:255|alpha',
+            'last_name' => 'nullable|string|max:255|alpha',
             'date_of_birth' => 'nullable|date',
             'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
             'gender' => 'nullable|in:Male,Female',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:13',
             'password' => 'nullable|string|min:6', // Password is optional on update
         ]);
 

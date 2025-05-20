@@ -31,9 +31,9 @@ class HospitalController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|alpha',
             'email' => 'required|email|unique:users,email|unique:hospitals,email',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => 'required|string|max:13',
             'address' => 'required|string',
             'account' => 'required|string',
             'image' => 'required|image|mimes:jpg,jpeg,png',
@@ -123,10 +123,10 @@ class HospitalController extends Controller
 
         // Validate input while ignoring the current Hospital's email
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255|alpha',
             'email' => 'nullable|email|unique:users,email|unique:hospitals,email,'.$hospital->email,
 
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:13',
 
             'address' => 'nullable|string',
             'account' => 'nullable|string',
