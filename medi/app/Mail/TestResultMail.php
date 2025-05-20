@@ -2,15 +2,12 @@
 
 namespace App\Mail;
 
+use App\Models\Test;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-
-use App\Models\Test;
-use Carbon\carbon;
 
 class TestResultMail extends Mailable
 {
@@ -19,8 +16,8 @@ class TestResultMail extends Mailable
     /**
      * Create a new message instance.
      */
-
     public $test;
+
     public function __construct(Test $test)
     {
         $this->test = $test;

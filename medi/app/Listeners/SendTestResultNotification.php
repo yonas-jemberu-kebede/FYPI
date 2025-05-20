@@ -3,12 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\TestResultReady;
-use App\Mail\PatientResultNotification;
-use App\Models\Doctor;
 use App\Models\Notification;
-use App\Models\Patient;
-use Illuminate\Support\Facades\Mail;
-use NunoMaduro\Collision\Adapters\Phpunit\TestResult;
 
 class SendTestResultNotification
 {

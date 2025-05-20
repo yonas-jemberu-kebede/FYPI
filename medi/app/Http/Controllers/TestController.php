@@ -6,7 +6,6 @@ use App\Events\TestPaymentRequested;
 use App\Events\TestRequestConfirmed;
 use App\Events\TestResultReady;
 use App\Mail\TestPaymentRequestEmail;
-use App\Mail\TestPaymentReadyEmail;
 use App\Mail\TestResultMail;
 use App\Models\Doctor;
 use App\Models\Hospital;
@@ -34,7 +33,7 @@ class TestController extends Controller
             'test_ids' => 'required|array|exists:test_prices,id',
         ]);
 
-        //dump($validated);
+        // dump($validated);
         $testIds = $validated['test_ids'];
         $totalAmount = TestPrice::whereIn('id', $testIds)->sum('price');
         // dump($totalAmount);
@@ -65,7 +64,7 @@ class TestController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        $txRef = 'TEST-' . $pendingTesting->id . '-' . time();
+        $txRef = 'TEST-'.$pendingTesting->id.'-'.time();
 
         $chapaSecretKey = $hospital->account;
 
@@ -73,7 +72,7 @@ class TestController extends Controller
         $email = $patient->email;
         // dump($email);
         $chapaResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $chapaSecretKey,
+            'Authorization' => 'Bearer '.$chapaSecretKey,
         ])->post('https://api.chapa.co/v1/transaction/initialize', [
             'amount' => $totalAmount,
             'currency' => 'ETB',
@@ -177,12 +176,8 @@ class TestController extends Controller
             'status' => 'completed',
         ]);
 
-
-
         // Trigger the TestResultReady event
         event(new TestResultReady($test));
-
-
 
         Mail::to($test->patient->email)->send(new TestResultMail($test));
 
