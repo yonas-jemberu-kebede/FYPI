@@ -10,7 +10,7 @@ class Appointment extends Model
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'doctor_id', 'hospital_id', 'appointment_date', 'appointment_time', 'amount', 'status', 'video_chat_link'];
+    protected $fillable = ['patient_id', 'doctor_id', 'hospital_id', 'appointment_date', 'appointment_time', 'amount', 'status', 'video_chat_link', 'video_chat_link_date'];
 
     public function patient()
     {

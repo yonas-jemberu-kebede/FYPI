@@ -322,4 +322,29 @@ class DoctorController extends Controller
             'specialized doctor' => $doctors,
         ]);
     }
+
+    public function fetchVideoLink()
+    {
+
+        $now = Carbon::now();
+
+        $date = $now->toDateString();
+
+        $appointments = Appointment::where('doctor_id', Auth::user()->associated_id)
+            ->where('video_chat_link_date', $date)
+            ->orderBy('video_chat_link_date','asc')
+            ->get();
+
+        $appointment = $appointments->map(function ($app) {
+            return [
+                'link'=>$app->video_chat_link,
+                'chat date'=>$app->video_chat_link_date
+            ];
+        });
+
+
+        return response()->json([
+            'video_chat_link' => $appointment
+        ]);
+    }
 }

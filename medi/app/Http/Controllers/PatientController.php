@@ -95,7 +95,7 @@ class PatientController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'date_of_birth' => 'nullable|date',
-            'email' => 'nullable|email|unique:users,email|unique:patients,email,'.$patient->email,
+            'email' => 'nullable|email|unique:users,email|unique:patients,email,' . $patient->email,
             'gender' => 'nullable|in:Male,Female',
             'phone_number' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6', // Password is optional on update
@@ -246,30 +246,30 @@ class PatientController extends Controller
         ]);
     }
 
-    public function patientHistory(){
-
-        $appointment=Appointment::where('patient_id',Auth::user()->associated_id)->first();
-
-        $doctorName=$appointment->doctor->first_name;
-        $hospitalName=$appointment->hospital->name;
 
 
-        $test =Test::where('patient_id', Auth::user()->associated_id)->first();
+    public function fetchVideoLink()
+    {
 
-        $testResult=$test->test_results;
-        $prescription=Prescription::where('patient_id', Auth::user()->associated_id)->first();
-        $medications=$prescription->medications;
+        $now = Carbon::now();
+
+        $date = $now->toDateString();
+
+        $appointments = Appointment::where('patient_id', Auth::user()->associated_id)
+            ->where('video_chat_link_date', '>', $date)
+            ->orderBy('video_chat_link_date', 'asc')
+            ->get();
+
+        $appointment = $appointments->map(function ($app) {
+            return [
+                'link' => $app->video_chat_link,
+                'chat date' => $app->video_chat_link_date
+            ];
+        });
+
 
         return response()->json([
-            'message'=>"patient history",
-            'history'=>[
-                'hospital name'=>$hospitalName,
-                'doctor name'=>$doctorName,
-                'test result'=>$testResult,
-                'medication'=>$medications,
-                'appointment date'=>$appointment->appointment_date,
-                'appointment time'=>$appointment->appointment_time,
-            ]
-            ]);
+            'video_chat_link' => $appointment
+        ]);
     }
 }

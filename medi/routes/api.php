@@ -45,6 +45,10 @@ Route::get('/pharmacyNotification', [PharmacyController::class, 'fetchNotificati
 Route::get('/showPatient/{patient}', [PatientController::class, 'show']);
 Route::put('/updatePatient/{patient}', [PatientController::class, 'update']);
 
+
+Route::get('/fetchVideoLinkForPatient', [PatientController::class, 'fetchVideoLink'])->middleware('auth:sanctum');
+Route::get('/fetchVideoLinkForDoctor', [DoctorController::class, 'fetchVideoLink'])->middleware('auth:sanctum');
+
 Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/upcomingAppointmentForDoctor', [DoctorController::class, 'upcomingAppointment'])->middleware('auth:sanctum');
 Route::get('/upcomingAppointmentForPatient', [PatientController::class, 'upcomingAppointment'])->middleware('auth:sanctum');

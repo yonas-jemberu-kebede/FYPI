@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('amount', 8, 2)->default(100.00);
             $table->string('status')->default('pending');
             $table->string('video_chat_link')->nullable();
+            $table->dateTime('video_chat_link_date')->nullable();
             $table->timestamps();
         });
     }

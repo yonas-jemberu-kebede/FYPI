@@ -250,10 +250,12 @@ class AppointmentController extends Controller
 
         $validated = $request->validate([
             'video_chat_link' => 'required|url',
+            'video_chat_link_date' => 'required|datetime|after_or_equal:today',
         ]);
 
         $appointment->update([
             'video_chat_link' => $validated['video_chat_link'],
+            'video_chat_link_date' => $validated['video_chat_link_date'],
         ]);
 
         return response()->json([
