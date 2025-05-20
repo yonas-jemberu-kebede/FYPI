@@ -272,4 +272,58 @@ class PatientController extends Controller
             'video_chat_link' => $appointment
         ]);
     }
+
+
+    public function patientHistory()
+    {
+        // Get the authenticated user's associated ID
+        $patientId = Auth::user()->associated_id;
+
+        // Fetch all appointments for the patient
+        $appointments = Appointment::where('patient_id', $patientId)->get();
+
+        // Initialize history array
+        $history = [
+            'appointments' => [],
+            'tests' => [],
+            'prescriptions' => [],
+        ];
+
+        // Process appointments
+        if ($appointments->isNotEmpty()) {
+            $history['appointments'] = $appointments->map(function ($appointment) {
+                return [
+                    'hospital_name' => optional($appointment->hospital)->name ?? 'N/A',
+                    'doctor_name' => optional($appointment->doctor)->first_name ?? 'N/A',
+                    'appointment_date' => $appointment->appointment_date,
+                    'appointment_time' => $appointment->appointment_time,
+                ];
+            })->toArray();
+        }
+
+        // Fetch all tests for the patient
+        $tests = Test::where('patient_id', $patientId)->get();
+        if ($tests->isNotEmpty()) {
+            $history['tests'] = $tests->map(function ($test) {
+                return [
+                    'test_results' => $test->test_results ?? 'N/A',
+                ];
+            })->toArray();
+        }
+
+        // Fetch all prescriptions for the patient
+        $prescriptions = Prescription::where('patient_id', $patientId)->get();
+        if ($prescriptions->isNotEmpty()) {
+            $history['prescriptions'] = $prescriptions->map(function ($prescription) {
+                return [
+                    'medications' => $prescription->medications ?? 'N/A',
+                ];
+            })->toArray();
+        }
+
+        return response()->json([
+            'message' => 'Patient history retrieved successfully',
+            'history' => $history,
+        ], 200);
+    }
 }
