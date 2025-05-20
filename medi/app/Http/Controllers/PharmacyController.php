@@ -88,7 +88,7 @@ class PharmacyController extends Controller
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,'.$pharmacy->email,
+            'email' => 'nullable|email|unique:users,email|unique:pharmacies,email,' . $pharmacy->email,
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'password' => 'nullable',
@@ -174,15 +174,15 @@ class PharmacyController extends Controller
 
         $notifications = Notification::where('notifiable_id', $pharmacy->id)
             ->where('notifiable_type', 'App\Models\Pharmacy')
-            ->whereNull('status', 'pending')
+            ->where('status', 'pending')
             ->get();
 
         // Map notifications to extract the 'message' from each 'data' array
         $notificationMessages = $notifications->map(function ($not) {
+            $notification = $not->data;
+            $not->update(['status' => 'checked']);
 
-            $not->update(['status' => 'pending']);
-
-            return $not->data;
+            return $notification;
         });
 
         return response()->json([

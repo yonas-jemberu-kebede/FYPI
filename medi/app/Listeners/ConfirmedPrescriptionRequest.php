@@ -23,8 +23,7 @@ class ConfirmedPrescriptionRequest
             'notifiable_type' => 'App\Models\Pharmacy',
             'notifiable_id' => $event->prescription->pharmacy_id,
             'data' => [
-                'message' => "New prescription for {$event->prescription->patient->first_name} {$event->prescription->patient->last_name} from {$event->prescription->doctor->first_name}
-                   on {$event->prescription->created_at}",
+                'message' => "New prescription for {$event->prescription->patient->first_name} {$event->prescription->patient->last_name} from {$event->prescription->doctor->first_name} on {$event->prescription->created_at}",
 
             ],
             'read_at' => null,
